@@ -4,7 +4,6 @@ import {
   BatchTransactionType,
   BatchWalletConfig,
   DepositTransaction,
-  PrivateWalletTransaction,
   SwapTransaction,
   TransferTransaction,
   WithdrawTransaction,
@@ -22,25 +21,12 @@ export interface ExecutionResult {
   result?: any;
 }
 
-const formatError = (error: any): string => {
-  const msg = error instanceof Error ? error.message : String(error);
-  if (
-    msg.includes("insufficient funds") ||
-    msg.includes("INSUFFICIENT_FUNDS") ||
-    msg.includes("gas required exceeds allowance") ||
-    msg.includes("UNPREDICTABLE_GAS_LIMIT")
-  ) {
-    return "Insufficient ETH for gas fees. Please fund the wallet.";
-  }
-  return msg;
-};
-
 const handleResponse = async (tx: any): Promise<ExecutionResult> => {
   if (typeof tx === "bigint") {
     return { success: true, result: { gasEstimate: tx.toString() } };
   }
 
-  if ("wait" in tx && typeof tx.wait === "function") {
+  if (tx?.wait instanceof Function) {
     const receipt = await tx.wait();
     return {
       success: true,
@@ -74,6 +60,11 @@ const getToken = async (
   );
 };
 
+const fail = async (error: unknown): Promise<ExecutionResult> => {
+  const { getErrorMessage } = await import("@sabaaa1/common");
+  return { success: false, error: getErrorMessage(error) };
+};
+
 export const initializeHinkal = async (
   wallet: BatchWalletConfig
 ): Promise<HinkalInstance> => {
@@ -94,8 +85,7 @@ export const initializeHinkal = async (
     provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   }
 
-  const signer = new ethers.Wallet(wallet.privateKey, provider);
-  return prepareEthersHinkal(signer);
+  return prepareEthersHinkal(new ethers.Wallet(wallet.privateKey, provider));
 };
 
 const executeDeposit = async (
@@ -103,11 +93,14 @@ const executeDeposit = async (
   tx: DepositTransaction
 ): Promise<ExecutionResult> => {
   try {
-    const token = await getToken(tx.tokenAddress, hinkal.getCurrentChainId());
-    const res = await hinkal.deposit([token], [BigInt(tx.amount)]);
-    return handleResponse(res);
+    return handleResponse(
+      await hinkal.deposit(
+        [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
+        [BigInt(tx.amount)]
+      )
+    );
   } catch (error) {
-    return { success: false, error: formatError(error) };
+    return fail(error);
   }
 };
 
@@ -116,17 +109,17 @@ const executeWithdraw = async (
   tx: WithdrawTransaction
 ): Promise<ExecutionResult> => {
   try {
-    const token = await getToken(tx.tokenAddress, hinkal.getCurrentChainId());
-    const res = await hinkal.withdraw(
-      [token],
-      [BigInt(tx.amount)],
-      tx.recipientAddress,
-      tx.isRelayerOff ?? false,
-      tx.feeToken
+    return handleResponse(
+      await hinkal.withdraw(
+        [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
+        [BigInt(tx.amount)],
+        tx.recipientAddress,
+        tx.isRelayerOff ?? false,
+        tx.feeToken
+      )
     );
-    return handleResponse(res);
-  } catch (error) {
-    return { success: false, error: formatError(error) };
+  } catch (e) {
+    return fail(e);
   }
 };
 
@@ -143,16 +136,16 @@ const executeTransfer = async (
       );
     }
 
-    const token = await getToken(tx.tokenAddress, hinkal.getCurrentChainId());
-    const res = await hinkal.transfer(
-      [token],
-      [BigInt(tx.amount)],
-      recipient,
-      tx.feeToken
+    return handleResponse(
+      await hinkal.transfer(
+        [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
+        [BigInt(tx.amount)],
+        recipient,
+        tx.feeToken
+      )
     );
-    return handleResponse(res);
-  } catch (error) {
-    return { success: false, error: formatError(error) };
+  } catch (e) {
+    return fail(e);
   }
 };
 
@@ -162,87 +155,42 @@ const executeSwap = async (
 ): Promise<ExecutionResult> => {
   try {
     const chainId = hinkal.getCurrentChainId();
-    const tokens = [
-      await getToken(tx.tokenIn, chainId),
-      await getToken(tx.tokenOut, chainId),
-    ];
     const { ExternalActionId } = await import("@sabaaa1/common");
 
-    const res = await hinkal.swap(
-      tokens,
-      [BigInt(tx.amountIn), BigInt(0)],
-      tx.externalActionId || ExternalActionId.Uniswap,
-      tx.swapData,
-      tx.feeToken
+    return handleResponse(
+      await hinkal.swap(
+        [
+          await getToken(tx.tokenIn, chainId),
+          await getToken(tx.tokenOut, chainId),
+        ],
+        [BigInt(tx.amountIn), BigInt(0)],
+        tx.externalActionId || ExternalActionId.Uniswap,
+        tx.swapData,
+        tx.feeToken
+      )
     );
-    return handleResponse(res);
-  } catch (error) {
-    return { success: false, error: formatError(error) };
-  }
-};
-
-const executePrivateWallet = async (
-  hinkal: HinkalInstance,
-  tx: PrivateWalletTransaction
-): Promise<ExecutionResult> => {
-  try {
-    const res = await hinkal.actionPrivateWallet(
-      tx.erc20Addresses,
-      tx.deltaAmounts.map(BigInt),
-      tx.onChainCreation,
-      tx.operations,
-      tx.emporiumTokenChanges
-        ? await Promise.all(
-            tx.emporiumTokenChanges.map(async (change) => ({
-              token: await getToken(
-                change.tokenAddress,
-                hinkal.getCurrentChainId()
-              ),
-              amount: BigInt(change.amount),
-            }))
-          )
-        : [],
-      undefined,
-      tx.feeToken
-    );
-    return handleResponse(res);
-  } catch (error) {
-    return { success: false, error: formatError(error) };
+  } catch (e) {
+    return fail(e);
   }
 };
 
 export const executeTransaction = async (
   hinkal: HinkalInstance,
-  transaction: BatchTransaction
+  tx: BatchTransaction
 ): Promise<ExecutionResult> => {
-  try {
-    switch (transaction.type) {
-      case BatchTransactionType.Deposit:
-        return await executeDeposit(hinkal, transaction as DepositTransaction);
-      case BatchTransactionType.Withdraw:
-        return await executeWithdraw(
-          hinkal,
-          transaction as WithdrawTransaction
-        );
-      case BatchTransactionType.Transfer:
-        return await executeTransfer(
-          hinkal,
-          transaction as TransferTransaction
-        );
-      case BatchTransactionType.Swap:
-        return await executeSwap(hinkal, transaction as SwapTransaction);
-      case BatchTransactionType.PrivateWallet:
-        return await executePrivateWallet(
-          hinkal,
-          transaction as PrivateWalletTransaction
-        );
-      default:
-        return {
-          success: false,
-          error: `Unknown transaction type: ${(transaction as any).type}`,
-        };
-    }
-  } catch (error) {
-    return { success: false, error: formatError(error) };
+  switch (tx.type) {
+    case BatchTransactionType.Deposit:
+      return executeDeposit(hinkal, tx as DepositTransaction);
+    case BatchTransactionType.Withdraw:
+      return executeWithdraw(hinkal, tx as WithdrawTransaction);
+    case BatchTransactionType.Transfer:
+      return executeTransfer(hinkal, tx as TransferTransaction);
+    case BatchTransactionType.Swap:
+      return executeSwap(hinkal, tx as SwapTransaction);
+    default:
+      return {
+        success: false,
+        error: `Unknown transaction type: ${(tx as any).type}`,
+      };
   }
 };

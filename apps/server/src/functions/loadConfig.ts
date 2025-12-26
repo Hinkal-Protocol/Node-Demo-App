@@ -1,6 +1,25 @@
 import { readFileSync } from "fs";
 import { join } from "path";
-import { BatchTransactionInput, BatchTransaction } from "./types";
+import {
+  BatchTransactionInput,
+  BatchTransaction,
+  BatchTransactionType,
+} from "./types";
+
+const REQUIRED_FIELDS: Record<string, string[]> = {
+  [BatchTransactionType.Deposit]: ["tokenAddress", "amount"],
+  [BatchTransactionType.Withdraw]: [
+    "tokenAddress",
+    "amount",
+    "recipientAddress",
+  ],
+  [BatchTransactionType.Transfer]: [
+    "tokenAddress",
+    "amount",
+    "recipientAddress",
+  ],
+  [BatchTransactionType.Swap]: ["tokenIn", "tokenOut", "amountIn", "swapData"],
+};
 
 const validateTransaction = (
   tx: any,
@@ -16,88 +35,33 @@ const validateTransaction = (
     throw new Error(`Transaction ${tx.id}: missing 'privateKey'`);
   }
 
+  const requiredFields = REQUIRED_FIELDS[tx.type];
+  if (!requiredFields) {
+    throw new Error(
+      `Transaction ${tx.id}: Unknown transaction type '${tx.type}'`
+    );
+  }
+
+  for (const field of requiredFields) {
+    if (!tx[field]) {
+      throw new Error(`Transaction ${tx.id}: missing '${field}'`);
+    }
+  }
+
+  if (tx.type === BatchTransactionType.Transfer) {
+    const recipient = String(tx.recipientAddress).trim();
+    if (!recipient.includes(",") || recipient.split(",").length !== 3) {
+      throw new Error(
+        `Transaction ${tx.id}: Invalid recipient format. Must be "randomization,stealthAddress,encryptionKey".`
+      );
+    }
+  }
+
   const chainId = tx.chainId || defaultChainId;
   if (!chainId) {
     throw new Error(
       `Transaction ${tx.id}: missing 'chainId' (not specified in transaction or default)`
     );
-  }
-
-  switch (tx.type) {
-    case "deposit":
-      if (!tx.tokenAddress) {
-        throw new Error(`Transaction ${tx.id}: missing 'tokenAddress'`);
-      }
-      if (!tx.amount) {
-        throw new Error(`Transaction ${tx.id}: missing 'amount'`);
-      }
-      break;
-
-    case "withdraw":
-      if (!tx.tokenAddress) {
-        throw new Error(`Transaction ${tx.id}: missing 'tokenAddress'`);
-      }
-      if (!tx.amount) {
-        throw new Error(`Transaction ${tx.id}: missing 'amount'`);
-      }
-      if (!tx.recipientAddress) {
-        throw new Error(`Transaction ${tx.id}: missing 'recipientAddress'`);
-      }
-      break;
-
-    case "transfer":
-      if (!tx.tokenAddress) {
-        throw new Error(`Transaction ${tx.id}: missing 'tokenAddress'`);
-      }
-      if (!tx.amount) {
-        throw new Error(`Transaction ${tx.id}: missing 'amount'`);
-      }
-      if (!tx.recipientAddress) {
-        throw new Error(`Transaction ${tx.id}: missing 'recipientAddress'`);
-      }
-
-      const recipient = String(tx.recipientAddress).trim();
-      if (!recipient.includes(",") || recipient.split(",").length !== 3) {
-        throw new Error(
-          `Transaction ${tx.id}: Invalid recipient format. Must be "randomization,stealthAddress,encryptionKey".`
-        );
-      }
-      break;
-
-    case "swap":
-      if (!tx.tokenIn) {
-        throw new Error(`Transaction ${tx.id}: missing 'tokenIn'`);
-      }
-      if (!tx.tokenOut) {
-        throw new Error(`Transaction ${tx.id}: missing 'tokenOut'`);
-      }
-      if (!tx.amountIn) {
-        throw new Error(`Transaction ${tx.id}: missing 'amountIn'`);
-      }
-      if (!tx.swapData) {
-        throw new Error(`Transaction ${tx.id}: missing 'swapData'`);
-      }
-      break;
-
-    case "privateWallet":
-      if (!tx.erc20Addresses) {
-        throw new Error(`Transaction ${tx.id}: missing 'erc20Addresses'`);
-      }
-      if (!tx.deltaAmounts) {
-        throw new Error(`Transaction ${tx.id}: missing 'deltaAmounts'`);
-      }
-      if (!tx.onChainCreation) {
-        throw new Error(`Transaction ${tx.id}: missing 'onChainCreation'`);
-      }
-      if (!tx.operations) {
-        throw new Error(`Transaction ${tx.id}: missing 'operations'`);
-      }
-      break;
-
-    default:
-      throw new Error(
-        `Transaction ${tx.id}: Unknown transaction type '${tx.type}'`
-      );
   }
 
   return { ...tx, chainId } as BatchTransaction;
@@ -106,8 +70,7 @@ const validateTransaction = (
 export const loadConfig = (): BatchTransactionInput | null => {
   try {
     const configPath = join(process.cwd(), "transactions.json");
-    const fileContent = readFileSync(configPath, "utf-8");
-    const data = JSON.parse(fileContent);
+    const data = JSON.parse(readFileSync(configPath, "utf-8"));
 
     if (!Array.isArray(data.transactions)) {
       console.error(
@@ -129,13 +92,11 @@ export const loadConfig = (): BatchTransactionInput | null => {
       return null;
     }
 
-    const transactions = data.transactions.map((tx: any) =>
-      validateTransaction(tx, defaultChainId)
-    );
-
     return {
       chainId: defaultChainId,
-      transactions,
+      transactions: data.transactions.map((tx: any) =>
+        validateTransaction(tx, defaultChainId)
+      ),
     };
   } catch (error) {
     console.error(`Failed to load configuration: ${(error as Error).message}`);

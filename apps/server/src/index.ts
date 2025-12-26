@@ -17,10 +17,8 @@ if (typeof globalThis.addEventListener === "undefined") {
 }
 
 const main = async () => {
-  const input = loadConfig();
-  if (!input) process.exit(1);
-
   try {
+    const input = loadConfig();
     const result = await processBatch(input);
 
     if (result.success) {
@@ -31,7 +29,10 @@ const main = async () => {
       process.exit(1);
     }
   } catch (error) {
-    console.error("Fatal error during execution:", error);
+    console.error(
+      "Fatal error:",
+      error instanceof Error ? error.message : error
+    );
     process.exit(1);
   }
 };
