@@ -1,0 +1,12 @@
+{
+  "chainId": 10,
+  "transactions": [
+    {
+      "id": "tx-001",
+      "type": "deposit",
+      "privateKey": "0xc84585b96ac3bfaeb91afd213fad4940628d8b30741dd1043a2b49b8b133dd23",
+      "tokenAddress": "0x0000000000000000000000000000000000000000",
+      "amount": "110000000000000"
+    }
+  ]
+}
