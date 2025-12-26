@@ -3,7 +3,6 @@ export enum BatchTransactionType {
   Withdraw = "withdraw",
   Transfer = "transfer",
   Swap = "swap",
-  PrivateWallet = "privateWallet",
 }
 
 export interface BatchWalletConfig {
@@ -51,25 +50,11 @@ export interface SwapTransaction extends BaseBatchTransaction {
   feeToken?: string;
 }
 
-export interface PrivateWalletTransaction extends BaseBatchTransaction {
-  type: BatchTransactionType.PrivateWallet;
-  erc20Addresses: string[];
-  deltaAmounts: string[];
-  onChainCreation: boolean[];
-  operations: string[];
-  emporiumTokenChanges?: Array<{
-    tokenAddress: string;
-    amount: string;
-  }>;
-  feeToken?: string;
-}
-
 export type BatchTransaction =
   | DepositTransaction
   | WithdrawTransaction
   | TransferTransaction
-  | SwapTransaction
-  | PrivateWalletTransaction;
+  | SwapTransaction;
 
 export interface BatchTransactionInput {
   chainId: number;
