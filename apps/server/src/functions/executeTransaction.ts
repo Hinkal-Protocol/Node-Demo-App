@@ -26,6 +26,15 @@ const handleResponse = async (tx: any): Promise<ExecutionResult> => {
     return { success: true, result: { gasEstimate: tx.toString() } };
   }
 
+  if (tx?.transactionHash && typeof tx.transactionHash === "string") {
+    return {
+      success: true,
+      txHash: tx.transactionHash,
+      blockNumber: tx.blockNumber,
+      gasUsed: tx.gasUsed?.toString(),
+    };
+  }
+
   if (tx?.wait instanceof Function) {
     const receipt = await tx.wait();
     return {
@@ -38,9 +47,9 @@ const handleResponse = async (tx: any): Promise<ExecutionResult> => {
 
   return {
     success: true,
-    txHash: tx.transactionHash,
+    txHash: tx.hash || tx.transactionHash,
     blockNumber: tx.blockNumber,
-    gasUsed: tx.gasUsed?.hex,
+    gasUsed: tx.gasUsed?.toString() || tx.gasUsed?.hex,
   };
 };
 
@@ -60,9 +69,32 @@ const getToken = async (
   );
 };
 
-const fail = async (error: unknown): Promise<ExecutionResult> => {
-  const { getErrorMessage } = await import("@sabaaa1/common");
-  return { success: false, error: getErrorMessage(error) };
+const fail = (error: unknown): ExecutionResult => {
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+      ? error
+      : String(error);
+  return { success: false, error: errorMessage };
+};
+
+const syncMerkleTree = async (hinkal: HinkalInstance): Promise<void> => {
+  try {
+    if (typeof hinkal.getEventsFromHinkal === "function") {
+      await hinkal.getEventsFromHinkal();
+    }
+  } catch (err) {
+    console.warn("Warning: getEventsFromHinkal failed:", err);
+  }
+
+  try {
+    if (typeof hinkal.resetMerkleTreesIfNecessary === "function") {
+      await hinkal.resetMerkleTreesIfNecessary();
+    }
+  } catch (err) {
+    console.warn("Warning: resetMerkleTreesIfNecessary failed:", err);
+  }
 };
 
 export const initializeHinkal = async (
@@ -93,6 +125,7 @@ const executeDeposit = async (
   tx: DepositTransaction
 ): Promise<ExecutionResult> => {
   try {
+    await syncMerkleTree(hinkal);
     return handleResponse(
       await hinkal.deposit(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
@@ -109,6 +142,7 @@ const executeWithdraw = async (
   tx: WithdrawTransaction
 ): Promise<ExecutionResult> => {
   try {
+    await syncMerkleTree(hinkal);
     return handleResponse(
       await hinkal.withdraw(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
@@ -118,8 +152,8 @@ const executeWithdraw = async (
         tx.feeToken
       )
     );
-  } catch (e) {
-    return fail(e);
+  } catch (error) {
+    return fail(error);
   }
 };
 
@@ -135,6 +169,8 @@ const executeTransfer = async (
         `Invalid Hinkal Address: ${recipient}. Format: "randomization,stealthAddress,encryptionKey".`
       );
     }
+
+    await syncMerkleTree(hinkal);
 
     return handleResponse(
       await hinkal.transfer(
@@ -157,6 +193,8 @@ const executeSwap = async (
     const chainId = hinkal.getCurrentChainId();
     const { ExternalActionId } = await import("@sabaaa1/common");
 
+    await syncMerkleTree(hinkal);
+
     return handleResponse(
       await hinkal.swap(
         [
@@ -178,19 +216,23 @@ export const executeTransaction = async (
   hinkal: HinkalInstance,
   tx: BatchTransaction
 ): Promise<ExecutionResult> => {
-  switch (tx.type) {
-    case BatchTransactionType.Deposit:
-      return executeDeposit(hinkal, tx as DepositTransaction);
-    case BatchTransactionType.Withdraw:
-      return executeWithdraw(hinkal, tx as WithdrawTransaction);
-    case BatchTransactionType.Transfer:
-      return executeTransfer(hinkal, tx as TransferTransaction);
-    case BatchTransactionType.Swap:
-      return executeSwap(hinkal, tx as SwapTransaction);
-    default:
-      return {
-        success: false,
-        error: `Unknown transaction type: ${(tx as any).type}`,
-      };
+  try {
+    switch (tx.type) {
+      case BatchTransactionType.Deposit:
+        return await executeDeposit(hinkal, tx as DepositTransaction);
+      case BatchTransactionType.Withdraw:
+        return await executeWithdraw(hinkal, tx as WithdrawTransaction);
+      case BatchTransactionType.Transfer:
+        return await executeTransfer(hinkal, tx as TransferTransaction);
+      case BatchTransactionType.Swap:
+        return await executeSwap(hinkal, tx as SwapTransaction);
+      default:
+        return {
+          success: false,
+          error: `Unknown transaction type: ${(tx as any).type}`,
+        };
+    }
+  } catch (error) {
+    return fail(error);
   }
 };

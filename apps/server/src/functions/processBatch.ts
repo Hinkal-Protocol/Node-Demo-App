@@ -1,5 +1,6 @@
 import { BatchTransactionInput } from "./types";
 import { executeTransaction, initializeHinkal } from "./executeTransaction";
+import { ethers } from "ethers";
 
 export interface BatchProcessResult {
   jobId: string;
@@ -9,6 +10,30 @@ export interface BatchProcessResult {
   failedTransactionId?: string;
   error?: string;
 }
+
+const providerCache = new Map<number, ethers.providers.Provider>();
+const hinkalCache = new Map<string, any>();
+
+const getProvider = (
+  chainId: number,
+  rpcUrl: string
+): ethers.providers.Provider => {
+  if (!providerCache.has(chainId)) {
+    providerCache.set(chainId, new ethers.providers.JsonRpcProvider(rpcUrl));
+  }
+  return providerCache.get(chainId)!;
+};
+
+const getHinkal = async (walletConfig: {
+  privateKey: string;
+  chainId: number;
+}): Promise<any> => {
+  const key = `${walletConfig.privateKey}-${walletConfig.chainId}`;
+  if (!hinkalCache.has(key)) {
+    hinkalCache.set(key, await initializeHinkal(walletConfig));
+  }
+  return hinkalCache.get(key)!;
+};
 
 export const processBatch = async (
   input: BatchTransactionInput
@@ -26,7 +51,6 @@ export const processBatch = async (
       `Starting batch job ${jobId} | Transactions: ${input.transactions.length}`
     );
 
-    const { ethers } = await import("ethers");
     const { networkRegistry } = await import("@sabaaa1/common");
 
     for (let i = 0; i < input.transactions.length; i++) {
@@ -48,7 +72,7 @@ export const processBatch = async (
         throw new Error(`RPC URL not found for chain ${chainId}`);
       }
 
-      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      const provider = getProvider(chainId, rpcUrl);
       const wallet = new ethers.Wallet(tx.privateKey, provider);
       const walletAddress = wallet.address;
       const balance = await provider.getBalance(walletAddress);
@@ -74,7 +98,7 @@ export const processBatch = async (
         chainId,
       };
 
-      const hinkal = await initializeHinkal(walletConfig);
+      const hinkal = await getHinkal(walletConfig);
       const result = await executeTransaction(hinkal, tx);
 
       if (!result.success) {
