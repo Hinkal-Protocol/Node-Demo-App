@@ -166,10 +166,13 @@ const executeWithdraw = async (
     return handleResponse(
       await hinkal.withdraw(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
-        [BigInt(tx.amount)],
+        [-BigInt(tx.amount)],
         tx.recipientAddress,
         tx.isRelayerOff ?? false,
-        tx.feeToken
+        undefined,
+        undefined,
+        undefined,
+        false
       )
     );
   } catch (error) {
