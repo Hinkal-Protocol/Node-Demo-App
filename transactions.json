@@ -32,7 +32,7 @@
       "tokenIn": "0x0000000000000000000000000000000000000000",
       "tokenOut": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
       "amountInUsds": "0.10",
-      "swapData": "500"
+      "swapData": "0x"
     }
   ]
 }

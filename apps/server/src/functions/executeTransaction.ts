@@ -237,7 +237,11 @@ const executeSwap = async (
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
 
-    const swapData = tx.swapData || "0x";
+    let swapData = tx.swapData || "0x";
+    if (swapData && !swapData.startsWith("0x")) {
+      const hex = BigInt(swapData).toString(16);
+      swapData = "0x" + (hex.length % 2 === 0 ? hex : "0" + hex);
+    }
 
     const result = await suppressLogs(async () => {
       return await hinkal.swap(
