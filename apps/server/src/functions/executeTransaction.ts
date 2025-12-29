@@ -214,20 +214,40 @@ const executeSwap = async (
 ): Promise<ExecutionResult> => {
   try {
     const chainId = hinkal.getCurrentChainId();
-    const { ExternalActionId } = await import("@sabaaa1/common");
+    const { ExternalActionId, getUniswapPrice } = await import(
+      "@sabaaa1/common"
+    );
 
     await syncMerkleTree(hinkal);
 
+    const tokenIn = await getToken(tx.tokenIn, chainId);
+    const tokenOut = await getToken(tx.tokenOut, chainId);
+
+    let swapData = tx.swapData || "0x";
+
+    if (swapData === "0x") {
+      console.log("Fetching swap quote...");
+      const amountInToken = (
+        Number(tx.amountIn) / Math.pow(10, tokenIn.decimals)
+      ).toString();
+      const quote = await getUniswapPrice(
+        hinkal,
+        chainId,
+        amountInToken,
+        tokenIn,
+        tokenOut
+      );
+      swapData = quote.poolFee;
+      console.log("Quote fetched successfully");
+    }
+
     return handleResponse(
       await hinkal.swap(
-        [
-          await getToken(tx.tokenIn, chainId),
-          await getToken(tx.tokenOut, chainId),
-        ],
-        [BigInt(tx.amountIn), BigInt(0)],
-        tx.externalActionId || ExternalActionId.Uniswap,
-        tx.swapData,
-        tx.feeToken
+        [tokenIn, tokenOut],
+        [-BigInt(tx.amountIn), BigInt(0)],
+        ExternalActionId.Uniswap,
+        swapData,
+        undefined
       )
     );
   } catch (e) {
