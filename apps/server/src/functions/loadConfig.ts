@@ -42,14 +42,12 @@ const validateTransaction = (
 ): BatchTransaction => {
   const txId = tx.id || "unknown";
 
-  // Validate basic fields
   if (!tx.id || !tx.type) {
     throw new Error(`Transaction ${txId}: missing 'id' or 'type'`);
   }
 
   validateRequiredField(tx, "privateKey", txId);
 
-  // Validate transaction type
   const requiredFields = REQUIRED_FIELDS[tx.type as BatchTransactionType];
   if (!requiredFields) {
     throw new Error(
@@ -57,17 +55,14 @@ const validateTransaction = (
     );
   }
 
-  // Validate required fields for this transaction type
   for (const field of requiredFields) {
     validateRequiredField(tx, field, txId);
   }
 
-  // Validate transfer recipient format
   if (tx.type === BatchTransactionType.Transfer) {
     validateTransferRecipient(tx.recipientAddress, txId);
   }
 
-  // Validate chainId
   const chainId = tx.chainId || defaultChainId;
   if (!chainId) {
     throw new Error(

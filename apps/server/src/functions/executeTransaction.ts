@@ -81,20 +81,41 @@ const fail = (error: unknown): ExecutionResult => {
 
 const syncMerkleTree = async (hinkal: HinkalInstance): Promise<void> => {
   try {
-    if (typeof hinkal.getEventsFromHinkal === "function") {
-      await hinkal.getEventsFromHinkal();
-    }
+    await hinkal.getEventsFromHinkal();
+    await hinkal.resetMerkleTreesIfNecessary();
   } catch (err) {
-    console.warn("Warning: getEventsFromHinkal failed:", err);
+    console.warn("Warning: Merkle tree sync failed:", err);
   }
+};
 
-  try {
-    if (typeof hinkal.resetMerkleTreesIfNecessary === "function") {
-      await hinkal.resetMerkleTreesIfNecessary();
-    }
-  } catch (err) {
-    console.warn("Warning: resetMerkleTreesIfNecessary failed:", err);
-  }
+const forceLegacyType0 = (
+  signer: ethers.Wallet,
+  provider:
+    | ethers.providers.StaticJsonRpcProvider
+    | ethers.providers.WebSocketProvider
+): void => {
+  const originalSend = signer.sendTransaction.bind(signer);
+
+  signer.sendTransaction = async (
+    txReq: ethers.providers.TransactionRequest
+  ) => {
+    let gasPrice = await provider.getGasPrice();
+
+    const GASPRICE_CAP_GWEI = "25";
+    const gasPriceCap = ethers.utils.parseUnits(GASPRICE_CAP_GWEI, "gwei");
+    if (gasPrice.gt(gasPriceCap)) gasPrice = gasPriceCap;
+
+    const { maxFeePerGas, maxPriorityFeePerGas, ...txReqWithoutEip1559 } =
+      txReq;
+
+    const patched: ethers.providers.TransactionRequest = {
+      ...txReqWithoutEip1559,
+      type: 0,
+      gasPrice,
+    };
+
+    return originalSend(patched);
+  };
 };
 
 export const initializeHinkal = async (
@@ -103,21 +124,20 @@ export const initializeHinkal = async (
   const { prepareEthersHinkal } = await import(
     "@sabaaa1/common/providers/prepareEthersHinkal"
   );
-  const { networkRegistry, createTorRpcProvider } = await import(
-    "@sabaaa1/common"
-  );
+  const { networkRegistry } = await import("@sabaaa1/common");
 
   const rpcUrl = networkRegistry[wallet.chainId]?.fetchRpcUrl;
   if (!rpcUrl) throw new Error(`RPC URL not found for chain ${wallet.chainId}`);
 
-  let provider;
-  try {
-    provider = createTorRpcProvider(rpcUrl);
-  } catch {
-    provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-  }
+  const provider = rpcUrl.includes("wss")
+    ? new ethers.providers.WebSocketProvider(rpcUrl)
+    : new ethers.providers.StaticJsonRpcProvider(rpcUrl);
 
-  return prepareEthersHinkal(new ethers.Wallet(wallet.privateKey, provider));
+  const signer = new ethers.Wallet(wallet.privateKey, provider);
+
+  forceLegacyType0(signer, provider);
+
+  return prepareEthersHinkal(signer);
 };
 
 const executeDeposit = async (
