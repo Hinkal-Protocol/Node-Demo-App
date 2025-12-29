@@ -1,6 +1,15 @@
 import { BatchTransactionInput } from "./types";
 import { executeTransaction, initializeHinkal } from "./executeTransaction";
 import { ethers } from "ethers";
+import {
+  logBatchStart,
+  logTransaction,
+  logWallet,
+  logWarning,
+  logSuccess,
+  logBatchFailure,
+  logBatchComplete,
+} from "./logger";
 
 export interface BatchProcessResult {
   jobId: string;
@@ -47,9 +56,7 @@ export const processBatch = async (
       throw new Error("No transactions found in batch");
     }
 
-    console.log(
-      `Starting batch job ${jobId} | Transactions: ${input.transactions.length}`
-    );
+    logBatchStart(jobId, input.transactions.length, input.chainId);
 
     const { networkRegistry } = await import("@sabaaa1/common");
 
@@ -78,19 +85,11 @@ export const processBatch = async (
       const balance = await provider.getBalance(walletAddress);
       const balanceEth = ethers.utils.formatEther(balance);
 
-      console.log(
-        `Processing ${i + 1}/${input.transactions.length} [${tx.type} | ID: ${
-          tx.id
-        }]`
-      );
-      console.log(
-        `Wallet: ${walletAddress} | Balance: ${balanceEth} ETH | Chain: ${chainId}`
-      );
+      logTransaction(i + 1, input.transactions.length, tx.type, tx.id);
+      logWallet(walletAddress, balanceEth, chainId);
 
       if (parseFloat(balanceEth) < 0.01) {
-        console.warn(
-          `Warning: Low balance for transaction ${tx.id}. May fail due to insufficient gas.`
-        );
+        logWarning("Low balance warning - may fail due to insufficient gas");
       }
 
       const walletConfig = {
@@ -103,9 +102,7 @@ export const processBatch = async (
 
       if (!result.success) {
         const errorMessage = result.error || "Unknown error";
-        console.error(
-          `Batch stopped. Failed at transaction ${tx.id}: ${errorMessage}`
-        );
+        logBatchFailure(tx.id, i + 1, input.transactions.length, errorMessage);
 
         return {
           jobId,
@@ -119,12 +116,12 @@ export const processBatch = async (
 
       completedCount++;
       if (result.txHash) {
-        console.log(`Success (Tx: ${result.txHash.slice(0, 10)}...)`);
+        logSuccess(result.txHash, result.blockNumber, result.gasUsed);
       }
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`Batch completed successfully in ${duration}s`);
+    logBatchComplete(duration, completedCount, input.transactions.length);
 
     return {
       jobId,

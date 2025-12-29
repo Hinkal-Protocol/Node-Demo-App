@@ -6,6 +6,7 @@ import {
   BatchTransactionType,
 } from "./types";
 import { convertUsdToWei, getTokenDecimals } from "./convertUsdToWei";
+import { logConversion } from "./logger";
 
 const REQUIRED_FIELDS: Record<BatchTransactionType, string[]> = {
   [BatchTransactionType.Deposit]: ["tokenAddress"],
@@ -70,9 +71,6 @@ const validateTransaction = async (
     const tokenAddress = isSwap ? tx.tokenIn : tx.tokenAddress;
     const amountField = isSwap ? "amountIn" : "amount";
 
-    console.log(
-      `Converting USD amount ${tx.amountInUsds} to wei for transaction ${txId}...`
-    );
     const decimals = await getTokenDecimals(tokenAddress, chainId);
     const weiAmount = await convertUsdToWei(
       tx.amountInUsds,
@@ -81,9 +79,11 @@ const validateTransaction = async (
       decimals
     );
     (processedTx as any)[amountField] = weiAmount;
-    console.log(
-      `Converted ${tx.amountInUsds} USD to ${weiAmount} wei for ${txId}`
+    const weiFormatted = BigInt(weiAmount).toString();
+    const ethFormatted = (Number(weiAmount) / Math.pow(10, decimals)).toFixed(
+      6
     );
+    logConversion(tx.amountInUsds, ethFormatted, weiFormatted);
   } else {
     if (tx.type === BatchTransactionType.Swap) {
       if (tx.amountIn) {
@@ -101,6 +101,34 @@ const validateTransaction = async (
           `Transaction ${txId}: must provide either 'amount' (in wei) or 'amountInUsds' (in USD)`
         );
       }
+    }
+  }
+
+  if (tx.type === BatchTransactionType.Swap) {
+    if (!processedTx.amountIn || typeof processedTx.amountIn !== "string") {
+      throw new Error(
+        `Transaction ${txId}: 'amountIn' must be a valid string after processing`
+      );
+    }
+    try {
+      BigInt(processedTx.amountIn);
+    } catch (error) {
+      throw new Error(
+        `Transaction ${txId}: 'amountIn' value '${processedTx.amountIn}' cannot be converted to BigInt`
+      );
+    }
+  } else {
+    if (!processedTx.amount || typeof processedTx.amount !== "string") {
+      throw new Error(
+        `Transaction ${txId}: 'amount' must be a valid string after processing`
+      );
+    }
+    try {
+      BigInt(processedTx.amount);
+    } catch (error) {
+      throw new Error(
+        `Transaction ${txId}: 'amount' value '${processedTx.amount}' cannot be converted to BigInt`
+      );
     }
   }
 

@@ -8,6 +8,7 @@ import {
   TransferTransaction,
   WithdrawTransaction,
 } from "./types";
+import { suppressLogs } from "./logger";
 
 type HinkalInstance = any;
 type ERC20Token = any;
@@ -81,10 +82,14 @@ const fail = (error: unknown): ExecutionResult => {
 
 const syncMerkleTree = async (hinkal: HinkalInstance): Promise<void> => {
   try {
-    await hinkal.getEventsFromHinkal();
-    await hinkal.resetMerkleTreesIfNecessary();
+    await suppressLogs(async () => {
+      await hinkal.getEventsFromHinkal();
+      await hinkal.resetMerkleTreesIfNecessary();
+    });
   } catch (err) {
-    console.warn("Warning: Merkle tree sync failed:", err);
+    if (err instanceof Error && !err.message.includes("CustomEvent")) {
+      console.warn("⚠️  Merkle tree sync warning:", err.message);
+    }
   }
 };
 
@@ -146,12 +151,15 @@ const executeDeposit = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
-    return handleResponse(
-      await hinkal.deposit(
+
+    const result = await suppressLogs(async () => {
+      return await hinkal.deposit(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
         [BigInt(tx.amount)]
-      )
-    );
+      );
+    });
+
+    return handleResponse(result);
   } catch (error) {
     return fail(error);
   }
@@ -163,8 +171,9 @@ const executeWithdraw = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
-    return handleResponse(
-      await hinkal.withdraw(
+
+    const result = await suppressLogs(async () => {
+      return await hinkal.withdraw(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
         [-BigInt(tx.amount)],
         tx.recipientAddress,
@@ -173,8 +182,10 @@ const executeWithdraw = async (
         undefined,
         undefined,
         false
-      )
-    );
+      );
+    });
+
+    return handleResponse(result);
   } catch (error) {
     return fail(error);
   }
@@ -195,14 +206,16 @@ const executeTransfer = async (
 
     await syncMerkleTree(hinkal);
 
-    return handleResponse(
-      await hinkal.transfer(
+    const result = await suppressLogs(async () => {
+      return await hinkal.transfer(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
         [-BigInt(tx.amount)],
         recipient,
         tx.feeToken
-      )
-    );
+      );
+    });
+
+    return handleResponse(result);
   } catch (e) {
     return fail(e);
   }
@@ -213,43 +226,30 @@ const executeSwap = async (
   tx: SwapTransaction
 ): Promise<ExecutionResult> => {
   try {
+    if (!tx.amountIn) {
+      throw new Error("Transaction amountIn is required");
+    }
     const chainId = hinkal.getCurrentChainId();
-    const { ExternalActionId, getUniswapPrice } = await import(
-      "@sabaaa1/common"
-    );
+    const { ExternalActionId } = await import("@sabaaa1/common");
 
     await syncMerkleTree(hinkal);
 
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
 
-    let swapData = tx.swapData || "0x";
+    const swapData = tx.swapData || "0x";
 
-    if (swapData === "0x") {
-      console.log("Fetching swap quote...");
-      const amountInToken = (
-        Number(tx.amountIn) / Math.pow(10, tokenIn.decimals)
-      ).toString();
-      const quote = await getUniswapPrice(
-        hinkal,
-        chainId,
-        amountInToken,
-        tokenIn,
-        tokenOut
-      );
-      swapData = quote.poolFee;
-      console.log("Quote fetched successfully");
-    }
-
-    return handleResponse(
-      await hinkal.swap(
+    const result = await suppressLogs(async () => {
+      return await hinkal.swap(
         [tokenIn, tokenOut],
         [-BigInt(tx.amountIn), BigInt(0)],
         ExternalActionId.Uniswap,
         swapData,
         tx.feeToken
-      )
-    );
+      );
+    });
+
+    return handleResponse(result);
   } catch (e) {
     return fail(e);
   }

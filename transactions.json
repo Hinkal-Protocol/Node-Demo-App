@@ -2,11 +2,37 @@
   "chainId": 10,
   "transactions": [
     {
-      "id": "test-swap-001",
+      "id": "test-deposit-001",
       "type": "deposit",
       "privateKey": "0xc84585b96ac3bfaeb91afd213fad4940628d8b30741dd1043a2b49b8b133dd23",
       "tokenAddress": "0x0000000000000000000000000000000000000000",
-      "amountInUsds": "0.3"
+      "amountInUsds": "0.10"
+    },
+    {
+      "id": "test-withdraw-001",
+      "type": "withdraw",
+      "privateKey": "0xc84585b96ac3bfaeb91afd213fad4940628d8b30741dd1043a2b49b8b133dd23",
+      "tokenAddress": "0x0000000000000000000000000000000000000000",
+      "amountInUsds": "0.10",
+      "recipientAddress": "0x462C158E0FB729D9F47658216633195587a67B42",
+      "isRelayerOff": true
+    },
+    {
+      "id": "test-transfer-001",
+      "type": "transfer",
+      "privateKey": "0xc84585b96ac3bfaeb91afd213fad4940628d8b30741dd1043a2b49b8b133dd23",
+      "tokenAddress": "0x0000000000000000000000000000000000000000",
+      "amountInUsds": "0.10",
+      "recipientAddress": "191177632491606260206298635982788440128694812841926375614128115276359135462,0x1caddb7c09e4769109f5761ecc66463b15059860149ce57bfb8fcae54971f4c0,0x40535cf67aca22bc47128916f902ab39f03e9e95799dfece83a7bcb2aca69325"
+    },
+    {
+      "id": "test-swap-001",
+      "type": "swap",
+      "privateKey": "0xc84585b96ac3bfaeb91afd213fad4940628d8b30741dd1043a2b49b8b133dd23",
+      "tokenIn": "0x0000000000000000000000000000000000000000",
+      "tokenOut": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+      "amountInUsds": "0.10",
+      "swapData": "500"
     }
   ]
 }

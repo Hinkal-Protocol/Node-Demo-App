@@ -1,5 +1,8 @@
 import { processBatch } from "./functions/processBatch";
 import { loadConfig } from "./functions/loadConfig";
+import { initializeLogger } from "./functions/logger";
+
+initializeLogger();
 
 if (typeof globalThis.addEventListener === "undefined") {
   globalThis.addEventListener = () => {};
