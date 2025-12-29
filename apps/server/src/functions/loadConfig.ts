@@ -5,20 +5,13 @@ import {
   BatchTransaction,
   BatchTransactionType,
 } from "./types";
+import { convertUsdToWei, getTokenDecimals } from "./convertUsdToWei";
 
 const REQUIRED_FIELDS: Record<BatchTransactionType, string[]> = {
-  [BatchTransactionType.Deposit]: ["tokenAddress", "amount"],
-  [BatchTransactionType.Withdraw]: [
-    "tokenAddress",
-    "amount",
-    "recipientAddress",
-  ],
-  [BatchTransactionType.Transfer]: [
-    "tokenAddress",
-    "amount",
-    "recipientAddress",
-  ],
-  [BatchTransactionType.Swap]: ["tokenIn", "tokenOut", "amountIn", "swapData"],
+  [BatchTransactionType.Deposit]: ["tokenAddress"],
+  [BatchTransactionType.Withdraw]: ["tokenAddress", "recipientAddress"],
+  [BatchTransactionType.Transfer]: ["tokenAddress", "recipientAddress"],
+  [BatchTransactionType.Swap]: ["tokenIn", "tokenOut", "swapData"],
 };
 
 const validateRequiredField = (tx: any, field: string, txId: string): void => {
@@ -36,10 +29,10 @@ const validateTransferRecipient = (recipient: string, txId: string): void => {
   }
 };
 
-const validateTransaction = (
+const validateTransaction = async (
   tx: any,
   defaultChainId: number
-): BatchTransaction => {
+): Promise<BatchTransaction> => {
   const txId = tx.id || "unknown";
 
   if (!tx.id || !tx.type) {
@@ -70,7 +63,48 @@ const validateTransaction = (
     );
   }
 
-  return { ...tx, chainId } as BatchTransaction;
+  const processedTx = { ...tx, chainId };
+
+  if (tx.amountInUsds) {
+    const isSwap = tx.type === BatchTransactionType.Swap;
+    const tokenAddress = isSwap ? tx.tokenIn : tx.tokenAddress;
+    const amountField = isSwap ? "amountIn" : "amount";
+
+    console.log(
+      `Converting USD amount ${tx.amountInUsds} to wei for transaction ${txId}...`
+    );
+    const decimals = await getTokenDecimals(tokenAddress, chainId);
+    const weiAmount = await convertUsdToWei(
+      tx.amountInUsds,
+      tokenAddress,
+      chainId,
+      decimals
+    );
+    (processedTx as any)[amountField] = weiAmount;
+    console.log(
+      `Converted ${tx.amountInUsds} USD to ${weiAmount} wei for ${txId}`
+    );
+  } else {
+    if (tx.type === BatchTransactionType.Swap) {
+      if (tx.amountIn) {
+        processedTx.amountIn = tx.amountIn;
+      } else {
+        throw new Error(
+          `Transaction ${txId}: must provide either 'amountIn' (in wei) or 'amountInUsds' (in USD)`
+        );
+      }
+    } else {
+      if (tx.amount) {
+        processedTx.amount = tx.amount;
+      } else {
+        throw new Error(
+          `Transaction ${txId}: must provide either 'amount' (in wei) or 'amountInUsds' (in USD)`
+        );
+      }
+    }
+  }
+
+  return processedTx as BatchTransaction;
 };
 
 const parseChainId = (chainId: unknown): number | null => {
@@ -104,7 +138,7 @@ const validateConfigStructure = (
   return true;
 };
 
-export const loadConfig = (): BatchTransactionInput | null => {
+export const loadConfig = async (): Promise<BatchTransactionInput | null> => {
   try {
     const configPath = join(process.cwd(), "transactions.json");
     const data = JSON.parse(readFileSync(configPath, "utf-8"));
@@ -118,11 +152,15 @@ export const loadConfig = (): BatchTransactionInput | null => {
       return null;
     }
 
+    const transactions: BatchTransaction[] = [];
+    for (const tx of data.transactions) {
+      const processedTx = await validateTransaction(tx, defaultChainId);
+      transactions.push(processedTx);
+    }
+
     return {
       chainId: defaultChainId,
-      transactions: data.transactions.map((tx: any) =>
-        validateTransaction(tx, defaultChainId)
-      ),
+      transactions,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

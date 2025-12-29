@@ -18,7 +18,11 @@ if (typeof globalThis.addEventListener === "undefined") {
 
 const main = async () => {
   try {
-    const input = loadConfig();
+    const input = await loadConfig();
+    if (!input) {
+      console.error("Failed to load configuration");
+      process.exit(1);
+    }
     const result = await processBatch(input);
 
     if (result.success) {
