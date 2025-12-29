@@ -198,7 +198,7 @@ const executeTransfer = async (
     return handleResponse(
       await hinkal.transfer(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
-        [BigInt(tx.amount)],
+        [-BigInt(tx.amount)],
         recipient,
         tx.feeToken
       )
@@ -247,7 +247,7 @@ const executeSwap = async (
         [-BigInt(tx.amountIn), BigInt(0)],
         ExternalActionId.Uniswap,
         swapData,
-        undefined
+        tx.feeToken
       )
     );
   } catch (e) {
