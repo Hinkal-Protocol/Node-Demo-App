@@ -4,21 +4,6 @@ import { initializeLogger } from "./functions/logger";
 
 initializeLogger();
 
-if (typeof globalThis.addEventListener === "undefined") {
-  globalThis.addEventListener = () => {};
-  globalThis.removeEventListener = () => {};
-  globalThis.dispatchEvent = () => true;
-  if (typeof globalThis.Worker === "undefined") {
-    globalThis.Worker = class {
-      constructor() {}
-      postMessage() {}
-      terminate() {}
-      addEventListener() {}
-      removeEventListener() {}
-    } as any;
-  }
-}
-
 const main = async () => {
   try {
     const input = await loadConfig();

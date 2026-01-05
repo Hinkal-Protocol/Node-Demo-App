@@ -9,9 +9,7 @@ import {
   WithdrawTransaction,
 } from "./types";
 import { suppressLogs } from "./logger";
-
-type HinkalInstance = any;
-type ERC20Token = any;
+import { IHinkal, ERC20Token, getERC20Token, networkRegistry } from '@sabaaa1/common';
 
 export interface ExecutionResult {
   success: boolean;
@@ -58,7 +56,6 @@ const getToken = async (
   address: string,
   chainId: number
 ): Promise<ERC20Token> => {
-  const { getERC20Token } = await import("@sabaaa1/common");
   return (
     getERC20Token(address, chainId) || {
       chainId,
@@ -80,13 +77,14 @@ const fail = (error: unknown): ExecutionResult => {
   return { success: false, error: errorMessage };
 };
 
-const syncMerkleTree = async (hinkal: HinkalInstance): Promise<void> => {
+const syncMerkleTree = async (hinkal: IHinkal): Promise<void> => {
   try {
     await suppressLogs(async () => {
       await hinkal.getEventsFromHinkal();
       await hinkal.resetMerkleTreesIfNecessary();
     });
   } catch (err) {
+    console.log(err);
     if (err instanceof Error && !err.message.includes("CustomEvent")) {
       console.warn("⚠️  Merkle tree sync warning:", err.message);
     }
@@ -95,28 +93,18 @@ const syncMerkleTree = async (hinkal: HinkalInstance): Promise<void> => {
 
 const forceLegacyType0 = (
   signer: ethers.Wallet,
-  provider:
-    | ethers.providers.StaticJsonRpcProvider
-    | ethers.providers.WebSocketProvider
 ): void => {
   const originalSend = signer.sendTransaction.bind(signer);
 
   signer.sendTransaction = async (
     txReq: ethers.providers.TransactionRequest
   ) => {
-    let gasPrice = await provider.getGasPrice();
-
-    const GASPRICE_CAP_GWEI = "25";
-    const gasPriceCap = ethers.utils.parseUnits(GASPRICE_CAP_GWEI, "gwei");
-    if (gasPrice.gt(gasPriceCap)) gasPrice = gasPriceCap;
-
     const { maxFeePerGas, maxPriorityFeePerGas, ...txReqWithoutEip1559 } =
       txReq;
 
     const patched: ethers.providers.TransactionRequest = {
       ...txReqWithoutEip1559,
       type: 0,
-      gasPrice,
     };
 
     return originalSend(patched);
@@ -125,11 +113,10 @@ const forceLegacyType0 = (
 
 export const initializeHinkal = async (
   wallet: BatchWalletConfig
-): Promise<HinkalInstance> => {
+): Promise<IHinkal> => {
   const { prepareEthersHinkal } = await import(
     "@sabaaa1/common/providers/prepareEthersHinkal"
   );
-  const { networkRegistry } = await import("@sabaaa1/common");
 
   const rpcUrl = networkRegistry[wallet.chainId]?.fetchRpcUrl;
   if (!rpcUrl) throw new Error(`RPC URL not found for chain ${wallet.chainId}`);
@@ -140,13 +127,13 @@ export const initializeHinkal = async (
 
   const signer = new ethers.Wallet(wallet.privateKey, provider);
 
-  forceLegacyType0(signer, provider);
+  forceLegacyType0(signer);
 
   return prepareEthersHinkal(signer);
 };
 
 const executeDeposit = async (
-  hinkal: HinkalInstance,
+  hinkal: IHinkal,
   tx: DepositTransaction
 ): Promise<ExecutionResult> => {
   try {
@@ -166,7 +153,7 @@ const executeDeposit = async (
 };
 
 const executeWithdraw = async (
-  hinkal: HinkalInstance,
+  hinkal: IHinkal,
   tx: WithdrawTransaction
 ): Promise<ExecutionResult> => {
   try {
@@ -192,7 +179,7 @@ const executeWithdraw = async (
 };
 
 const executeTransfer = async (
-  hinkal: HinkalInstance,
+  hinkal: IHinkal,
   tx: TransferTransaction
 ): Promise<ExecutionResult> => {
   try {
@@ -222,7 +209,7 @@ const executeTransfer = async (
 };
 
 const executeSwap = async (
-  hinkal: HinkalInstance,
+  hinkal: IHinkal,
   tx: SwapTransaction
 ): Promise<ExecutionResult> => {
   try {
@@ -260,7 +247,7 @@ const executeSwap = async (
 };
 
 export const executeTransaction = async (
-  hinkal: HinkalInstance,
+  hinkal: IHinkal,
   tx: BatchTransaction
 ): Promise<ExecutionResult> => {
   try {

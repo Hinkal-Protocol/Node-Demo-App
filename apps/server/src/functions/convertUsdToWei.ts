@@ -1,4 +1,6 @@
 import { ethers } from "ethers";
+import { zeroAddress } from "viem";
+import { getTokenPrices, getERC20Token } from '@sabaaa1/common';
 
 const getTokenPriceUsd = async (
   tokenAddress: string,
@@ -21,39 +23,7 @@ const getTokenPriceUsd = async (
     tokenAddress === "0x0000000000000000000000000000000000000000";
 
   try {
-    const { getCoingeckoPrice, getCoingeckoPrice2, getTokenPrice } =
-      await import("@sabaaa1/common");
-
-    let priceUsd = 0;
-
-    if (isNative) {
-      try {
-        const priceData = await getCoingeckoPrice("ethereum");
-        priceUsd = priceData.usd || 0;
-      } catch (error) {
-        console.warn(
-          "getCoingeckoPrice failed, trying getTokenPrice...",
-          error
-        );
-        const priceData = await getTokenPrice(chainId);
-        priceUsd = priceData.price || 0;
-      }
-    } else {
-      try {
-        const priceData = await getCoingeckoPrice2(
-          tokenAddress.toLowerCase(),
-          platform
-        );
-        priceUsd = priceData.usd || 0;
-      } catch (error) {
-        console.warn(
-          "getCoingeckoPrice2 failed, trying getTokenPrice...",
-          error
-        );
-        const priceData = await getTokenPrice(chainId, tokenAddress);
-        priceUsd = priceData.price || 0;
-      }
-    }
+    const {prices: [priceUsd]} = await getTokenPrices(chainId, [zeroAddress])
 
     if (priceUsd <= 0) {
       throw new Error(
@@ -105,12 +75,11 @@ export const getTokenDecimals = async (
   tokenAddress: string,
   chainId: number
 ): Promise<number> => {
-  if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+  if (tokenAddress === zeroAddress) {
     return 18;
   }
 
   try {
-    const { getERC20Token } = await import("@sabaaa1/common");
     const token = getERC20Token(tokenAddress, chainId);
     return token?.decimals || 18;
   } catch (error) {

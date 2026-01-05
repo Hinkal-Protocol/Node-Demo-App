@@ -10,6 +10,7 @@ import {
   logBatchFailure,
   logBatchComplete,
 } from "./logger";
+import { networkRegistry } from "@sabaaa1/common";
 
 export interface BatchProcessResult {
   jobId: string;
@@ -57,8 +58,6 @@ export const processBatch = async (
     }
 
     logBatchStart(jobId, input.transactions.length, input.chainId);
-
-    const { networkRegistry } = await import("@sabaaa1/common");
 
     for (let i = 0; i < input.transactions.length; i++) {
       const tx = input.transactions[i];
