@@ -9,7 +9,7 @@ import {
   WithdrawTransaction,
 } from "./types";
 import { suppressLogs } from "./logger";
-import { IHinkal, ERC20Token, getERC20Token, networkRegistry, ExternalActionId, getAmountInWei, getUniswapPrice, getAmountInToken } from '@hinkal/common';
+import { IHinkal, ERC20Token, getERC20Token, networkRegistry, ExternalActionId, getUniswapPrice, getAmountInToken } from '@hinkal/common';
 import { sleep } from "./sleep";
 
 export interface ExecutionResult {
@@ -222,7 +222,7 @@ const executeSwap = async (
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
 
-    const priceDict = await getUniswapPrice(hinkal, hinkal.getCurrentChainId(), getAmountInToken(tokenIn, BigInt(tx.amountIn)), tokenIn, tokenOut);
+    const priceDict = await getUniswapPrice(hinkal, chainId, getAmountInToken(tokenIn, BigInt(tx.amountIn)), tokenIn, tokenOut);
 
     const result = await suppressLogs(async () => {
       return await hinkal.swap(

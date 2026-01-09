@@ -12,8 +12,8 @@
   },
   "private": true,
   "dependencies": {
-    "@sabaaa1/common": "^0.1.6",
-    "ethers": "5",
+    "@hinkal/common": "../Hinkal-Protocol/dist/libs/shared/common/",
+    "ethers": "5.7.2",
     "viem": "^2.43.3"
   },
   "devDependencies": {
