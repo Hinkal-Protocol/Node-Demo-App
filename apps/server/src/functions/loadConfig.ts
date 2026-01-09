@@ -7,12 +7,13 @@ import {
 } from "./types";
 import { convertUsdToWei, getTokenDecimals } from "./convertUsdToWei";
 import { logConversion } from "./logger";
+import { getERC20Token } from "@sabaaa1/common";
 
 const REQUIRED_FIELDS: Record<BatchTransactionType, string[]> = {
   [BatchTransactionType.Deposit]: ["tokenAddress"],
   [BatchTransactionType.Withdraw]: ["tokenAddress", "recipientAddress"],
   [BatchTransactionType.Transfer]: ["tokenAddress", "recipientAddress"],
-  [BatchTransactionType.Swap]: ["tokenIn", "tokenOut", "swapData"],
+  [BatchTransactionType.Swap]: ["tokenIn", "tokenOut"],
 };
 
 const validateRequiredField = (tx: any, field: string, txId: string): void => {
@@ -23,7 +24,7 @@ const validateRequiredField = (tx: any, field: string, txId: string): void => {
 
 const validateTransferRecipient = (recipient: string, txId: string): void => {
   const trimmed = recipient.trim();
-  if (!trimmed.includes(",") || trimmed.split(",").length !== 3) {
+  if (!trimmed.includes(",") || trimmed.split(",").length !== 5) {
     throw new Error(
       `Transaction ${txId}: Invalid recipient format. Must be "randomization,stealthAddress,encryptionKey".`
     );
@@ -83,7 +84,12 @@ const validateTransaction = async (
     const ethFormatted = (Number(weiAmount) / Math.pow(10, decimals)).toFixed(
       6
     );
-    logConversion(tx.amountInUsds, ethFormatted, weiFormatted);
+    logConversion(
+      tx.amountInUsds,
+      ethFormatted,
+      weiFormatted,
+      getERC20Token(tokenAddress, chainId).symbol
+    );
   } else {
     if (tx.type === BatchTransactionType.Swap) {
       if (tx.amountIn) {

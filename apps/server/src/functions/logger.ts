@@ -156,10 +156,13 @@ export const logWallet = (
 
 export const logConversion = (
   usdAmount: string,
-  ethAmount: string,
-  weiAmount: string
+  convertedAmount: string,
+  weiAmount: string,
+  tokenName: string
 ): void => {
-  console.log(`   💱 ${usdAmount} USD → ${ethAmount} ETH (${weiAmount} wei)`);
+  console.log(
+    `   💱 ${usdAmount} USD → ${convertedAmount} ${tokenName} (${weiAmount} wei)`
+  );
 };
 
 export const logSuccess = (
