@@ -7,7 +7,7 @@ import {
 } from "./types";
 import { convertUsdToWei, getTokenDecimals } from "./convertUsdToWei";
 import { logConversion } from "./logger";
-import { getERC20Token } from "@sabaaa1/common";
+import { getERC20Token } from "@hinkal/common";
 
 const REQUIRED_FIELDS: Record<BatchTransactionType, string[]> = {
   [BatchTransactionType.Deposit]: ["tokenAddress"],

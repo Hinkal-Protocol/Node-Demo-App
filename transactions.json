@@ -1,15 +1,47 @@
 {
-  "chainId": 10,
+  "chainId": 137,
   "transactions": [
     {
-      "id": "swap-dai-to-usdc-001",
+      "id": "test-deposit-001",
+      "type": "deposit",
+      "privateKey": "2e591b71f07697cdf7c0d2e7fc8e240582179f0bbd61127c3b921ced5592740d",
+      "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "amountInUsds": "1"
+    },
+    {
+      "id": "test-swap-001",
       "type": "swap",
       "privateKey": "2e591b71f07697cdf7c0d2e7fc8e240582179f0bbd61127c3b921ced5592740d",
-      "tokenIn": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-      "tokenOut": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
-      "amountInUsds": "0.01",
-      "swapData": "0x",
-      "feeToken": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+      "tokenIn": "0x0000000000000000000000000000000000000000",
+      "tokenOut": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "amountInUsds": "0.1",
+      "feeToken": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063"
+    },
+    {
+      "id": "test-transfer-001",
+      "type": "transfer",
+      "privateKey": "2e591b71f07697cdf7c0d2e7fc8e240582179f0bbd61127c3b921ced5592740d",
+      "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "amountInUsds": "0.1",
+      "recipientAddress": "388459947901125211363742655377489746981012742781794428506711841282050049370,0x282c47a1f1562061685de768d6d471b4759a1a7e5d080b221dae2866578b2e27,0x4b82c09bf4ebb5f9d5ba59ff4682b0b59615707effb8bc5037585f18f9eb4a33,11626958868658789098776946858796560897939013184286127029118197812021975272953,10499370411189270063086535676588859618462669907958227077582773613975113396801"
+    },
+    {
+      "id": "test-withdraw-001",
+      "type": "withdraw",
+      "privateKey": "2e591b71f07697cdf7c0d2e7fc8e240582179f0bbd61127c3b921ced5592740d",
+      "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "amountInUsds": "0.03",
+      "recipientAddress": "0x8D53d30Ac84784782135b7c13B58eD172945E991",
+      "isRelayerOff": true
+    },
+    {
+      "id": "test-withdraw-002",
+      "type": "withdraw",
+      "privateKey": "2e591b71f07697cdf7c0d2e7fc8e240582179f0bbd61127c3b921ced5592740d",
+      "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "amountInUsds": "0.05",
+      "recipientAddress": "0x8D53d30Ac84784782135b7c13B58eD172945E991",
+      "isRelayerOff": false
     }
   ]
 }

@@ -1,3 +1,6 @@
+import { getERC20Token } from "@hinkal/common";
+import { zeroAddress } from "viem";
+
 const SUPPRESS_SDK_LOGS = process.env.SUPPRESS_SDK_LOGS !== "false";
 
 const originalLog = console.log;
@@ -106,6 +109,8 @@ export const initializeLogger = (): void => {
 };
 
 export const suppressLogs = <T>(fn: () => T | Promise<T>): T | Promise<T> => {
+  return fn();
+  /*
   const originalLog = console.log;
   const originalWarn = console.warn;
   const originalError = console.error;
@@ -133,6 +138,7 @@ export const suppressLogs = <T>(fn: () => T | Promise<T>): T | Promise<T> => {
     console.error = originalError;
     throw error;
   }
+  */
 };
 
 export const logTransaction = (
@@ -150,8 +156,9 @@ export const logWallet = (
   balance: string,
   chainId: number
 ): void => {
+  const nativeToken =  getERC20Token(zeroAddress, chainId) ;
   console.log(`💰 Wallet: ${address}`);
-  console.log(`💵 Balance: ${balance} ETH | Chain: ${chainId}`);
+  console.log(`💵 Balance: ${balance} ${nativeToken.symbol} | Chain: ${chainId}`);
 };
 
 export const logConversion = (

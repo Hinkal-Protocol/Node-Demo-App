@@ -1,6 +1,5 @@
 import { ethers } from "ethers";
-import { zeroAddress } from "viem";
-import { getTokenPrices, getERC20Token } from '@sabaaa1/common';
+import { getTokenPrices, getERC20Token, zeroAddress } from '@hinkal/common';
 
 const getTokenPriceUsd = async (
   tokenAddress: string,
@@ -19,11 +18,8 @@ const getTokenPriceUsd = async (
     throw new Error(`Unsupported chain ID: ${chainId}`);
   }
 
-  const isNative =
-    tokenAddress === "0x0000000000000000000000000000000000000000";
-
   try {
-    const {prices: [priceUsd]} = await getTokenPrices(chainId, [zeroAddress])
+    const {prices: [priceUsd]} = await getTokenPrices(chainId, [tokenAddress])
 
     if (priceUsd <= 0) {
       throw new Error(
@@ -75,13 +71,9 @@ export const getTokenDecimals = async (
   tokenAddress: string,
   chainId: number
 ): Promise<number> => {
-  if (tokenAddress === zeroAddress) {
-    return 18;
-  }
-
   try {
     const token = getERC20Token(tokenAddress, chainId);
-    return token?.decimals || 18;
+    return token?.decimals ?? 18;
   } catch (error) {
     console.warn(
       `Could not get decimals for token ${tokenAddress}, defaulting to 18`

@@ -9,12 +9,8 @@ import {
   WithdrawTransaction,
 } from "./types";
 import { suppressLogs } from "./logger";
-import {
-  IHinkal,
-  ERC20Token,
-  getERC20Token,
-  networkRegistry,
-} from "@sabaaa1/common";
+import { IHinkal, ERC20Token, getERC20Token, networkRegistry, ExternalActionId, getAmountInWei, getUniswapPrice, getAmountInToken } from '@hinkal/common';
+import { sleep } from "./sleep";
 
 export interface ExecutionResult {
   success: boolean;
@@ -85,7 +81,10 @@ const fail = (error: unknown): ExecutionResult => {
 const syncMerkleTree = async (hinkal: IHinkal): Promise<void> => {
   try {
     await suppressLogs(async () => {
+      await sleep(20 * 1000);
+      console.log("getting events");
       await hinkal.getEventsFromHinkal();
+      console.log("resetting merkle trees");
       await hinkal.resetMerkleTreesIfNecessary();
     });
   } catch (err) {
@@ -110,6 +109,8 @@ const forceLegacyType0 = (signer: ethers.Wallet): void => {
       type: 0,
     };
 
+    console.log("patched and sending");
+
     return originalSend(patched);
   };
 };
@@ -118,7 +119,7 @@ export const initializeHinkal = async (
   wallet: BatchWalletConfig
 ): Promise<IHinkal> => {
   const { prepareEthersHinkal } = await import(
-    "@sabaaa1/common/providers/prepareEthersHinkal"
+    "@hinkal/common/providers/prepareEthersHinkal"
   );
 
   const rpcUrl = networkRegistry[wallet.chainId]?.fetchRpcUrl;
@@ -132,7 +133,7 @@ export const initializeHinkal = async (
 
   forceLegacyType0(signer);
 
-  return prepareEthersHinkal(signer);
+  return prepareEthersHinkal(signer, { cacheFilePath: process.cwd() });
 };
 
 const executeDeposit = async (
@@ -143,6 +144,7 @@ const executeDeposit = async (
     await syncMerkleTree(hinkal);
 
     const result = await suppressLogs(async () => {
+      console.log("starting deposit");
       return await hinkal.deposit(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
         [BigInt(tx.amount)]
@@ -188,12 +190,6 @@ const executeTransfer = async (
   try {
     const recipient = tx.recipientAddress.trim();
 
-    if (!recipient.includes(",") || recipient.split(",").length !== 3) {
-      throw new Error(
-        `Invalid Hinkal Address: ${recipient}. Format: "randomization,stealthAddress,encryptionKey".`
-      );
-    }
-
     await syncMerkleTree(hinkal);
 
     const result = await suppressLogs(async () => {
@@ -220,23 +216,20 @@ const executeSwap = async (
       throw new Error("Transaction amountIn is required");
     }
     const chainId = hinkal.getCurrentChainId();
-    const { ExternalActionId, getAmountInWei } = await import(
-      "@sabaaa1/common"
-    );
 
     await syncMerkleTree(hinkal);
 
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
 
-    const amountInWei = getAmountInWei(tokenIn, tx.amountIn);
+    const priceDict = await getUniswapPrice(hinkal, hinkal.getCurrentChainId(), getAmountInToken(tokenIn, BigInt(tx.amountIn)), tokenIn, tokenOut);
 
     const result = await suppressLogs(async () => {
       return await hinkal.swap(
         [tokenIn, tokenOut],
-        [-amountInWei, 0n],
+        [-BigInt(tx.amountIn), 0n],
         ExternalActionId.Uniswap,
-        tx.swapData,
+        priceDict.poolFee,
         tx.feeToken
       );
     });

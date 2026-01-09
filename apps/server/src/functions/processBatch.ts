@@ -10,7 +10,7 @@ import {
   logBatchFailure,
   logBatchComplete,
 } from "./logger";
-import { networkRegistry } from "@sabaaa1/common";
+import { networkRegistry } from "@hinkal/common";
 
 export interface BatchProcessResult {
   jobId: string;
@@ -82,12 +82,12 @@ export const processBatch = async (
       const wallet = new ethers.Wallet(tx.privateKey, provider);
       const walletAddress = wallet.address;
       const balance = await provider.getBalance(walletAddress);
-      const balanceEth = ethers.utils.formatEther(balance);
+      const balanceNative = ethers.utils.formatEther(balance);
 
       logTransaction(i + 1, input.transactions.length, tx.type, tx.id);
-      logWallet(walletAddress, balanceEth, chainId);
+      logWallet(walletAddress, balanceNative, chainId);
 
-      if (parseFloat(balanceEth) < 0.01) {
+      if (parseFloat(balanceNative) < 0.01) {
         logWarning("Low balance warning - may fail due to insufficient gas");
       }
 
