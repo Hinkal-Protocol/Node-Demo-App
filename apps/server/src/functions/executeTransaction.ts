@@ -133,7 +133,7 @@ export const initializeHinkal = async (
 
   forceLegacyType0(signer);
 
-  return prepareEthersHinkal(signer, { cacheFilePath: process.cwd() });
+  return prepareEthersHinkal(signer);
 };
 
 const executeDeposit = async (

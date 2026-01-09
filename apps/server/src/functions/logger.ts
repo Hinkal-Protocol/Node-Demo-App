@@ -109,8 +109,6 @@ export const initializeLogger = (): void => {
 };
 
 export const suppressLogs = <T>(fn: () => T | Promise<T>): T | Promise<T> => {
-  return fn();
-  /*
   const originalLog = console.log;
   const originalWarn = console.warn;
   const originalError = console.error;
@@ -138,7 +136,6 @@ export const suppressLogs = <T>(fn: () => T | Promise<T>): T | Promise<T> => {
     console.error = originalError;
     throw error;
   }
-  */
 };
 
 export const logTransaction = (
