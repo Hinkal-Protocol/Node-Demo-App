@@ -9,7 +9,12 @@ import {
   WithdrawTransaction,
 } from "./types";
 import { suppressLogs } from "./logger";
-import { IHinkal, ERC20Token, getERC20Token, networkRegistry } from '@sabaaa1/common';
+import {
+  IHinkal,
+  ERC20Token,
+  getERC20Token,
+  networkRegistry,
+} from "@sabaaa1/common";
 
 export interface ExecutionResult {
   success: boolean;
@@ -91,9 +96,7 @@ const syncMerkleTree = async (hinkal: IHinkal): Promise<void> => {
   }
 };
 
-const forceLegacyType0 = (
-  signer: ethers.Wallet,
-): void => {
+const forceLegacyType0 = (signer: ethers.Wallet): void => {
   const originalSend = signer.sendTransaction.bind(signer);
 
   signer.sendTransaction = async (
@@ -217,25 +220,23 @@ const executeSwap = async (
       throw new Error("Transaction amountIn is required");
     }
     const chainId = hinkal.getCurrentChainId();
-    const { ExternalActionId } = await import("@sabaaa1/common");
+    const { ExternalActionId, getAmountInWei } = await import(
+      "@sabaaa1/common"
+    );
 
     await syncMerkleTree(hinkal);
 
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
 
-    let swapData = tx.swapData || "0x";
-    if (swapData && !swapData.startsWith("0x")) {
-      const hex = BigInt(swapData).toString(16);
-      swapData = "0x" + (hex.length % 2 === 0 ? hex : "0" + hex);
-    }
+    const amountInWei = getAmountInWei(tokenIn, tx.amountIn);
 
     const result = await suppressLogs(async () => {
       return await hinkal.swap(
         [tokenIn, tokenOut],
-        [-BigInt(tx.amountIn), BigInt(0)],
+        [-amountInWei, 0n],
         ExternalActionId.Uniswap,
-        swapData,
+        tx.swapData,
         tx.feeToken
       );
     });
