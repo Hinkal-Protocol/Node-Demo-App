@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { getTokenPrices, getERC20Token, zeroAddress } from '@hinkal/common';
+import { getTokenPrices, getERC20Token, zeroAddress } from "@hinkal/common";
 
 const getTokenPriceUsd = async (
   tokenAddress: string,
@@ -14,12 +14,12 @@ const getTokenPriceUsd = async (
   };
 
   const platform = chainIdToPlatform[chainId];
-  if (!platform) {
-    throw new Error(`Unsupported chain ID: ${chainId}`);
-  }
+  if (!platform) throw new Error(`Unsupported chain ID: ${chainId}`);
 
   try {
-    const {prices: [priceUsd]} = await getTokenPrices(chainId, [tokenAddress])
+    const {
+      prices: [priceUsd],
+    } = await getTokenPrices(chainId, [tokenAddress]);
 
     if (priceUsd <= 0) {
       throw new Error(
@@ -42,9 +42,8 @@ export const convertUsdToWei = async (
 ): Promise<string> => {
   try {
     const usdValue = parseFloat(usdAmount);
-    if (isNaN(usdValue) || usdValue <= 0) {
+    if (isNaN(usdValue) || usdValue <= 0)
       throw new Error(`Invalid USD amount: ${usdAmount}`);
-    }
 
     const tokenPriceUsd = await getTokenPriceUsd(tokenAddress, chainId);
     if (tokenPriceUsd <= 0) {
@@ -80,17 +79,4 @@ export const getTokenDecimals = async (
     );
     return 18;
   }
-};
-
-export const isUsdAmount = (amount: string): boolean => {
-  if (amount.includes(".")) {
-    return true;
-  }
-
-  const numValue = parseFloat(amount);
-  if (!isNaN(numValue) && numValue < 1e15) {
-    return true;
-  }
-
-  return false;
 };

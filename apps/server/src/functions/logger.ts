@@ -153,9 +153,11 @@ export const logWallet = (
   balance: string,
   chainId: number
 ): void => {
-  const nativeToken =  getERC20Token(zeroAddress, chainId) ;
+  const nativeToken = getERC20Token(zeroAddress, chainId);
   console.log(`💰 Wallet: ${address}`);
-  console.log(`💵 Balance: ${balance} ${nativeToken.symbol} | Chain: ${chainId}`);
+  console.log(
+    `💵 Balance: ${balance} ${nativeToken.symbol} | Chain: ${chainId}`
+  );
 };
 
 export const logConversion = (
@@ -185,13 +187,7 @@ export const logSuccess = (
 
 export const logError = (message: string, details?: string): void => {
   console.error(`\n❌ ${message}`);
-  if (details) {
-    console.error(`   ${details}`);
-  }
-};
-
-export const logWarning = (message: string): void => {
-  console.warn(`⚠️  ${message}`);
+  if (details) console.error(`   ${details}`);
 };
 
 export const logBatchStart = (

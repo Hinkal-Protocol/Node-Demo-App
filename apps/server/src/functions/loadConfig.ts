@@ -9,6 +9,8 @@ import { convertUsdToWei, getTokenDecimals } from "./convertUsdToWei";
 import { logConversion } from "./logger";
 import { getERC20Token } from "@hinkal/common";
 
+const TRANSACTIONS_FILE_NAME = "transactions.json";
+
 const REQUIRED_FIELDS: Record<BatchTransactionType, string[]> = {
   [BatchTransactionType.Deposit]: ["tokenAddress"],
   [BatchTransactionType.Withdraw]: ["tokenAddress", "recipientAddress"],
@@ -17,18 +19,13 @@ const REQUIRED_FIELDS: Record<BatchTransactionType, string[]> = {
 };
 
 const validateRequiredField = (tx: any, field: string, txId: string): void => {
-  if (!tx[field]) {
-    throw new Error(`Transaction ${txId}: missing '${field}'`);
-  }
+  if (!tx[field]) throw new Error(`Transaction ${txId}: missing '${field}'`);
 };
 
 const validateTransferRecipient = (recipient: string, txId: string): void => {
   const trimmed = recipient.trim();
-  if (!trimmed.includes(",") || trimmed.split(",").length !== 5) {
-    throw new Error(
-      `Transaction ${txId}: Invalid recipient format. Must be "randomization,stealthAddress,encryptionKey".`
-    );
-  }
+  if (!trimmed.includes(",") || trimmed.split(",").length !== 5)
+    throw new Error(`Transaction ${txId}: Invalid recipient format".`);
 };
 
 const validateTransaction = async (
@@ -37,9 +34,8 @@ const validateTransaction = async (
 ): Promise<BatchTransaction> => {
   const txId = tx.id || "unknown";
 
-  if (!tx.id || !tx.type) {
+  if (!tx.id || !tx.type)
     throw new Error(`Transaction ${txId}: missing 'id' or 'type'`);
-  }
 
   validateRequiredField(tx, "privateKey", txId);
 
@@ -54,16 +50,14 @@ const validateTransaction = async (
     validateRequiredField(tx, field, txId);
   }
 
-  if (tx.type === BatchTransactionType.Transfer) {
+  if (tx.type === BatchTransactionType.Transfer)
     validateTransferRecipient(tx.recipientAddress, txId);
-  }
 
   const chainId = tx.chainId || defaultChainId;
-  if (!chainId) {
+  if (!chainId)
     throw new Error(
       `Transaction ${txId}: missing 'chainId' (not specified in transaction or default)`
     );
-  }
 
   const processedTx = { ...tx, chainId };
 
@@ -143,16 +137,18 @@ const validateTransaction = async (
 
 const parseChainId = (chainId: unknown): number | null => {
   if (chainId === undefined || chainId === null) {
-    console.error("Error: 'chainId' is missing in transactions.json");
+    console.error("Error: 'chainId' is missing in ", {
+      TRANSACTIONS_FILE_NAME,
+    });
     return null;
   }
 
   const parsed =
     typeof chainId === "number" ? chainId : parseInt(String(chainId), 10);
   if (isNaN(parsed)) {
-    console.error(
-      "Error: 'chainId' must be a valid number in transactions.json"
-    );
+    console.error("Error: 'chainId' must be a valid number in ", {
+      TRANSACTIONS_FILE_NAME,
+    });
     return null;
   }
 
@@ -163,9 +159,9 @@ const validateConfigStructure = (
   data: any
 ): data is { chainId: unknown; transactions: unknown[] } => {
   if (!Array.isArray(data.transactions)) {
-    console.error(
-      "Error: 'transactions' array is missing in transactions.json"
-    );
+    console.error("Error: 'transactions' array is missing in ", {
+      TRANSACTIONS_FILE_NAME,
+    });
     return false;
   }
 
@@ -174,17 +170,13 @@ const validateConfigStructure = (
 
 export const loadConfig = async (): Promise<BatchTransactionInput | null> => {
   try {
-    const configPath = join(process.cwd(), "transactions.json");
+    const configPath = join(process.cwd(), TRANSACTIONS_FILE_NAME);
     const data = JSON.parse(readFileSync(configPath, "utf-8"));
 
-    if (!validateConfigStructure(data)) {
-      return null;
-    }
+    if (!validateConfigStructure(data)) return null;
 
     const defaultChainId = parseChainId(data.chainId);
-    if (defaultChainId === null) {
-      return null;
-    }
+    if (defaultChainId === null) return null;
 
     const transactions: BatchTransaction[] = [];
     for (const tx of data.transactions) {

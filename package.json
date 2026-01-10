@@ -12,7 +12,7 @@
   },
   "private": true,
   "dependencies": {
-    "@hinkal/common": "../Hinkal-Protocol/dist/libs/shared/common/",
+    "@hinkal/common": "0.2.16",
     "ethers": "5.7.2",
     "viem": "^2.43.3"
   },

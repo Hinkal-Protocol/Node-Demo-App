@@ -5,7 +5,6 @@ import {
   logBatchStart,
   logTransaction,
   logWallet,
-  logWarning,
   logSuccess,
   logBatchFailure,
   logBatchComplete,
@@ -63,33 +62,24 @@ export const processBatch = async (
       const tx = input.transactions[i];
       const chainId = tx.chainId || input.chainId;
 
-      if (!chainId) {
+      if (!chainId)
         throw new Error(
           `Transaction ${tx.id}: missing chainId (not specified in transaction or default)`
         );
-      }
 
-      if (!tx.privateKey) {
+      if (!tx.privateKey)
         throw new Error(`Transaction ${tx.id}: missing privateKey`);
-      }
 
       const rpcUrl = networkRegistry[chainId]?.fetchRpcUrl;
-      if (!rpcUrl) {
-        throw new Error(`RPC URL not found for chain ${chainId}`);
-      }
+      if (!rpcUrl) throw new Error(`RPC URL not found for chain ${chainId}`);
 
       const provider = getProvider(chainId, rpcUrl);
-      const wallet = new ethers.Wallet(tx.privateKey, provider);
-      const walletAddress = wallet.address;
+      const walletAddress = new ethers.Wallet(tx.privateKey, provider).address;
       const balance = await provider.getBalance(walletAddress);
       const balanceNative = ethers.utils.formatEther(balance);
 
       logTransaction(i + 1, input.transactions.length, tx.type, tx.id);
       logWallet(walletAddress, balanceNative, chainId);
-
-      if (parseFloat(balanceNative) < 0.01) {
-        logWarning("Low balance warning - may fail due to insufficient gas");
-      }
 
       const walletConfig = {
         privateKey: tx.privateKey,
@@ -114,9 +104,8 @@ export const processBatch = async (
       }
 
       completedCount++;
-      if (result.txHash) {
+      if (result.txHash)
         logSuccess(result.txHash, result.blockNumber, result.gasUsed);
-      }
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);

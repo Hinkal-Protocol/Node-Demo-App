@@ -6,7 +6,7 @@
       "type": "deposit",
       "privateKey": "2e591b71f07697cdf7c0d2e7fc8e240582179f0bbd61127c3b921ced5592740d",
       "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-      "amountInUsds": "1"
+      "amountInUsds": "0.2"
     },
     {
       "id": "test-swap-001",

@@ -1664,8 +1664,10 @@
     "@ethersproject/properties" "^5.8.0"
     "@ethersproject/strings" "^5.8.0"
 
-"@hinkal/common@../Hinkal-Protocol/dist/libs/shared/common/":
-  version "0.2.432429"
+"@hinkal/common@0.2.16":
+  version "0.2.16"
+  resolved "https://registry.yarnpkg.com/@hinkal/common/-/common-0.2.16.tgz#a5b5b3e34c2610f8d79bf8670efced3c5e583810"
+  integrity sha512-kVDs8dnOaxh2fw9GVZakr6bCbH/2nulYkilUJ/0pYnwUvYhQ+kL/vUQy1Ix7pz6ikviWNgdulsuAy2kQMYwrVg==
   dependencies:
     "@coral-xyz/anchor" "^0.31.0"
     "@solana/spl-token" "^0.4.14"
