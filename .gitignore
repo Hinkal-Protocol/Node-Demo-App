@@ -34,9 +34,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# nx
-.nx/cache
-.nx/workspace-data
+
+# Transaction config (may contain private keys)
+transactions.json
 
 # IDE
 .idea

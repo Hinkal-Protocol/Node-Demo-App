@@ -3,31 +3,19 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "nx": "nx",
-    "start": "nx serve server",
-    "build": "nx build server",
-    "test": "nx test",
-    "lint": "nx lint",
-    "serve": "nx serve server"
+    "start": "ts-node src/index.ts",
+    "serve": "ts-node src/index.ts",
+    "build": "tsc"
   },
   "private": true,
   "dependencies": {
-    "@hinkal/common": "0.2.16",
+    "@hinkal/common": "0.2.22",
     "ethers": "5.7.2",
     "viem": "^2.43.3"
   },
   "devDependencies": {
-    "@nx/js": "^22.3.3",
-    "@nx/node": "^18.0.0",
-    "@nx/webpack": "^22.3.3",
-    "@nx/workspace": "^18.0.0",
     "@types/node": "^20.11.0",
-    "@typescript-eslint/eslint-plugin": "^6.19.0",
-    "@typescript-eslint/parser": "^6.19.0",
-    "eslint": "^8.57.0",
-    "nx": "^18.0.0",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"
   }

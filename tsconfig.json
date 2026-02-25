@@ -13,11 +13,10 @@
     "lib": ["ES2022"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@hinkal-demo-app/server": ["apps/server/src"]
-    }
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "types": []
   },
-  "exclude": ["node_modules", "tmp"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }
-

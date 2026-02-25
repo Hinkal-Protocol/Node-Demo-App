@@ -4,9 +4,9 @@ import {
   BatchTransactionInput,
   BatchTransaction,
   BatchTransactionType,
-} from "./types";
-import { convertUsdToWei, getTokenDecimals } from "./convertUsdToWei";
-import { logConversion } from "./logger";
+} from "../types";
+import { convertUsdToWei, getTokenDecimals } from "../utils/convertUsdToWei";
+import { logConversion } from "../utils/logger";
 import { getERC20Token } from "@hinkal/common";
 
 const TRANSACTIONS_FILE_NAME = "transactions.json";

@@ -7,8 +7,8 @@ import {
   SwapTransaction,
   TransferTransaction,
   WithdrawTransaction,
-} from "./types";
-import { suppressLogs } from "./logger";
+} from "../types";
+import { suppressLogs } from "../utils/logger";
 import {
   IHinkal,
   ERC20Token,
@@ -18,7 +18,7 @@ import {
   getUniswapPrice,
   getAmountInToken,
 } from "@hinkal/common";
-import { sleep } from "./sleep";
+import { sleep } from "../utils/sleep";
 import { prepareEthersHinkal } from "@hinkal/common/providers/prepareEthersHinkal";
 
 export interface ExecutionResult {

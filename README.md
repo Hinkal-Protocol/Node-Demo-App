@@ -1,79 +1,87 @@
 # Hinkal Demo App
 
-A backend server application built with Nx and Express.js, following the same structure as the data-server.
+A batch transaction processor for the [Hinkal](https://hinkal.pro) privacy protocol, built with Nx and TypeScript. It reads a list of transactions from a local `transactions.json` file and executes them sequentially — supporting deposits, withdrawals, transfers, and swaps.
 
 ## Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js v18+
 - Yarn package manager
 
 ## Getting Started
 
 ### Installation
 
-Install dependencies using Yarn:
-
 ```bash
 yarn install
 ```
 
-### Environment Setup
+### Transaction Config Setup
 
-Copy the example environment file and configure it:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
-
-- `PORT`: Server port (default: 3001)
-- `NODE_ENV`: Environment (development/production)
-
-### Running the Server
+Copy the example config and fill in your private key(s) and transaction details:
 
 ```bash
-yarn serve
-# or
-nx serve server
+cp transactions.example.json transactions.json
 ```
 
-The server will run on `http://localhost:3001`
+Edit `transactions.json`:
 
-### API Endpoints
+- `chainId` — default chain ID for all transactions (e.g. `137` for Polygon)
+- `transactions` — array of transaction objects (see [Transaction Types](#transaction-types))
 
-- `GET /api/ping` - Server ping endpoint (returns status: success, message: server is on)
+> **Security:** `transactions.json` is git-ignored because it contains private keys. Never commit it.
+
+### Run
+
+```bash
+yarn start
+```
+
+The processor will validate the config, then execute each transaction in order. It stops on the first failure.
+
+## Transaction Types
+
+Each transaction requires `id`, `type`, and `privateKey`. Amounts can be specified in USD (`amountInUsds`) or wei (`amount` / `amountIn`).
+
+| Type       | Required fields                              |
+|------------|----------------------------------------------|
+| `deposit`  | `tokenAddress`, `amount` or `amountInUsds`   |
+| `withdraw` | `tokenAddress`, `recipientAddress`, `amount` or `amountInUsds` |
+| `transfer` | `tokenAddress`, `recipientAddress`, `amount` or `amountInUsds` |
+| `swap`     | `tokenIn`, `tokenOut`, `amountIn` or `amountInUsds` |
 
 ## Project Structure
 
 ```
 hinkal-demo-app/
-├── apps/
-│   └── server/          # Express.js backend server
-│       └── src/
-│           ├── index.ts         # Application entry point
-│           ├── constants.ts     # Configuration constants
-│           ├── routes/          # Route handlers
-│           │   └── ping.ts
-│           └── loaders/         # Route loaders
-│               └── routeLoader.ts
-├── package.json
-├── nx.json
-└── tsconfig.base.json
+├── transactions.example.json    # Template config — copy to transactions.json
+├── src/
+│   ├── index.ts                 # Entry point
+│   ├── types/                   # Shared TypeScript types
+│   │   └── index.ts
+│   ├── services/                # Core business logic
+│   │   ├── loadConfig.ts
+│   │   ├── processBatch.ts
+│   │   └── executeTransaction.ts
+│   └── utils/                   # Shared utilities
+│       ├── convertUsdToWei.ts
+│       ├── logger.ts
+│       └── sleep.ts
+├── tsconfig.json
+└── package.json
 ```
 
-## Development
+## Build
 
-### Build
+Compile to `dist/` with:
 
 ```bash
 yarn build
 ```
 
-### Lint
+Or run directly without compiling:
 
 ```bash
-yarn lint
+yarn start
 ```
 
 ## License

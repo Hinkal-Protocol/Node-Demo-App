@@ -1,6 +1,6 @@
-import { processBatch } from "./functions/processBatch";
-import { loadConfig } from "./functions/loadConfig";
-import { initializeLogger } from "./functions/logger";
+import { processBatch } from "./services/processBatch";
+import { loadConfig } from "./services/loadConfig";
+import { initializeLogger } from "./utils/logger";
 
 initializeLogger();
 

@@ -1,4 +1,4 @@
-import { BatchTransactionInput } from "./types";
+import { BatchTransactionInput } from "../types";
 import { executeTransaction, initializeHinkal } from "./executeTransaction";
 import { ethers } from "ethers";
 import {
@@ -8,7 +8,7 @@ import {
   logSuccess,
   logBatchFailure,
   logBatchComplete,
-} from "./logger";
+} from "../utils/logger";
 import { networkRegistry } from "@hinkal/common";
 
 export interface BatchProcessResult {
