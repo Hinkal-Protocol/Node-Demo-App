@@ -63,7 +63,7 @@ const handleResponse = async (tx: any): Promise<ExecutionResult> => {
 
 const getToken = async (
   address: string,
-  chainId: number
+  chainId: number,
 ): Promise<ERC20Token> => {
   return (
     getERC20Token(address, chainId) || {
@@ -81,8 +81,8 @@ const fail = (error: unknown): ExecutionResult => {
     error instanceof Error
       ? error.message
       : typeof error === "string"
-      ? error
-      : String(error);
+        ? error
+        : String(error);
   return { success: false, error: errorMessage };
 };
 
@@ -106,13 +106,11 @@ const syncMerkleTree = async (hinkal: IHinkal): Promise<void> => {
 const forceLegacyType0 = (signer: ethers.Wallet): void => {
   const originalSend = signer.sendTransaction.bind(signer);
 
-  signer.sendTransaction = async (
-    txReq: ethers.providers.TransactionRequest
-  ) => {
+  signer.sendTransaction = async (txReq: ethers.TransactionRequest) => {
     const { maxFeePerGas, maxPriorityFeePerGas, ...txReqWithoutEip1559 } =
       txReq;
 
-    const patched: ethers.providers.TransactionRequest = {
+    const patched: ethers.TransactionRequest = {
       ...txReqWithoutEip1559,
       type: 0,
     };
@@ -124,14 +122,14 @@ const forceLegacyType0 = (signer: ethers.Wallet): void => {
 };
 
 export const initializeHinkal = async (
-  wallet: BatchWalletConfig
+  wallet: BatchWalletConfig,
 ): Promise<IHinkal> => {
   const rpcUrl = networkRegistry[wallet.chainId]?.fetchRpcUrl;
   if (!rpcUrl) throw new Error(`RPC URL not found for chain ${wallet.chainId}`);
 
   const provider = rpcUrl.includes("wss")
-    ? new ethers.providers.WebSocketProvider(rpcUrl)
-    : new ethers.providers.StaticJsonRpcProvider(rpcUrl);
+    ? new ethers.WebSocketProvider(rpcUrl)
+    : new ethers.JsonRpcProvider(rpcUrl);
 
   const signer = new ethers.Wallet(wallet.privateKey, provider);
 
@@ -142,7 +140,7 @@ export const initializeHinkal = async (
 
 const executeDeposit = async (
   hinkal: IHinkal,
-  tx: DepositTransaction
+  tx: DepositTransaction,
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
@@ -150,7 +148,7 @@ const executeDeposit = async (
     const result = await suppressLogs(async () => {
       return await hinkal.deposit(
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
-        [BigInt(tx.amount)]
+        [BigInt(tx.amount)],
       );
     });
 
@@ -162,7 +160,7 @@ const executeDeposit = async (
 
 const executeWithdraw = async (
   hinkal: IHinkal,
-  tx: WithdrawTransaction
+  tx: WithdrawTransaction,
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
@@ -176,7 +174,7 @@ const executeWithdraw = async (
         undefined,
         undefined,
         undefined,
-        false
+        false,
       );
     });
 
@@ -188,7 +186,7 @@ const executeWithdraw = async (
 
 const executeTransfer = async (
   hinkal: IHinkal,
-  tx: TransferTransaction
+  tx: TransferTransaction,
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
@@ -198,7 +196,7 @@ const executeTransfer = async (
         [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
         [-BigInt(tx.amount)],
         tx.recipientAddress.trim(),
-        tx.feeToken
+        tx.feeToken,
       );
     });
 
@@ -210,14 +208,17 @@ const executeTransfer = async (
 
 const executeSwap = async (
   hinkal: IHinkal,
-  tx: SwapTransaction
+  tx: SwapTransaction,
 ): Promise<ExecutionResult> => {
   try {
-    if (!tx.amountIn) throw new Error("Transaction amountIn is required");
+    if (!tx.amountIn) throw new Error("Transaction amountIn is required, ");
 
     const chainId = hinkal.getCurrentChainId();
+    console.log("chainId", { tx });
 
     await syncMerkleTree(hinkal);
+
+    console.log("synced merkle tree");
 
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
@@ -227,28 +228,31 @@ const executeSwap = async (
       chainId,
       getAmountInToken(tokenIn, BigInt(tx.amountIn)),
       tokenIn,
-      tokenOut
+      tokenOut,
     );
 
-    const result = await suppressLogs(async () => {
-      return await hinkal.swap(
-        [tokenIn, tokenOut],
-        [-BigInt(tx.amountIn), 0n],
-        ExternalActionId.Uniswap,
-        priceDict.poolFee,
-        tx.feeToken
-      );
-    });
+    console.log({ tokenIn, tokenOut, priceDict });
+
+    const result = await hinkal.swap(
+      [tokenIn, tokenOut],
+      [-BigInt(tx.amountIn), 0n],
+      ExternalActionId.Uniswap,
+      priceDict.poolFee,
+      tx.feeToken,
+    );
+
+    console.log("after transaction", { result });
 
     return handleResponse(result);
   } catch (e) {
+    console.log("swap error", { e });
     return fail(e);
   }
 };
 
 export const executeTransaction = async (
   hinkal: IHinkal,
-  tx: BatchTransaction
+  tx: BatchTransaction,
 ): Promise<ExecutionResult> => {
   try {
     switch (tx.type) {

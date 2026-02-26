@@ -54,7 +54,7 @@ export const convertUsdToWei = async (
 
     const tokenAmount = usdValue / tokenPriceUsd;
 
-    const weiAmount = ethers.utils.parseUnits(
+    const weiAmount = ethers.parseUnits(
       tokenAmount.toFixed(decimals),
       decimals
     );

@@ -20,15 +20,15 @@ export interface BatchProcessResult {
   error?: string;
 }
 
-const providerCache = new Map<number, ethers.providers.Provider>();
+const providerCache = new Map<number, ethers.Provider>();
 const hinkalCache = new Map<string, any>();
 
 const getProvider = (
   chainId: number,
   rpcUrl: string
-): ethers.providers.Provider => {
+): ethers.Provider => {
   if (!providerCache.has(chainId)) {
-    providerCache.set(chainId, new ethers.providers.JsonRpcProvider(rpcUrl));
+    providerCache.set(chainId, new ethers.JsonRpcProvider(rpcUrl));
   }
   return providerCache.get(chainId)!;
 };
@@ -76,7 +76,7 @@ export const processBatch = async (
       const provider = getProvider(chainId, rpcUrl);
       const walletAddress = new ethers.Wallet(tx.privateKey, provider).address;
       const balance = await provider.getBalance(walletAddress);
-      const balanceNative = ethers.utils.formatEther(balance);
+      const balanceNative = ethers.formatEther(balance);
 
       logTransaction(i + 1, input.transactions.length, tx.type, tx.id);
       logWallet(walletAddress, balanceNative, chainId);

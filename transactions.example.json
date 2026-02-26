@@ -23,7 +23,8 @@
       "privateKey": "<YOUR_PRIVATE_KEY>",
       "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
       "amountInUsds": "0.1",
-      "recipientAddress": "<HINKAL_RECIPIENT_ADDRESS_5_PARTS>"
+      "recipientAddress": "<HINKAL_RECIPIENT_ADDRESS_5_PARTS>",
+      "feeToken": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
     },
     {
       "id": "test-withdraw-001",
@@ -36,3 +37,4 @@
     }
   ]
 }
+
