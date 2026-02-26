@@ -56,10 +56,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@hinkal/common@0.2.22":
-  version "0.2.22"
-  resolved "https://registry.yarnpkg.com/@hinkal/common/-/common-0.2.22.tgz#2dfc795fd916029b5c04a9938295a82933e0d2c3"
-  integrity sha512-EQX5hPvimQSUaNsI0r+sbmJVcwvQZi8bTwX7Ngy3gwHAhCiKoSnzcfqRHFm1Yds2R7avJkGK3PATGbhA0KqOJQ==
+"@hinkal/common@0.2.23":
+  version "0.2.23"
+  resolved "https://registry.yarnpkg.com/@hinkal/common/-/common-0.2.23.tgz#4c5f5ab2869afca2f7d24f2d6d59b5df45b2684d"
+  integrity sha512-kNjKkzZfe43JqFcy4MtdvhURfCVCy3sZnzGioclMTp/h2mZFWG/sIJJNVkOnTkFcykslq/Ae9WJKzh5Q/3W0zA==
   dependencies:
     "@coral-xyz/anchor" "^0.31.0"
     "@solana/spl-token" "^0.4.14"
@@ -71,9 +71,9 @@
     buffer "6.0.3"
     circomlibjs-hinkal-fork "^0.0.3"
     dotenv "^16.4.5"
-    ethers-v6h "npm:ethers@^6.15.0"
+    ethers "^6.15.0"
     idb-keyval "6.2.1"
-    libsodium-wrappers "^0.7.10"
+    libsodium-wrappers "^0.8.2"
     multiformats "^9.4.2"
     node-forge "^1.3.1"
     process "0.11.10"
@@ -1058,19 +1058,6 @@ esutils@^2.0.2:
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.3.tgz#74d2eb4de0b8da1293711910d50775b9b710ef64"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
 
-"ethers-v6h@npm:ethers@^6.15.0":
-  version "6.16.0"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.16.0.tgz#fff9b4f05d7a359c774ad6e91085a800f7fccf65"
-  integrity sha512-U1wulmetNymijEhpSEQ7Ct/P/Jw9/e7R1j5XIbPRydgV2DjLVMsULDlNksq3RQnFgKoLlZf88ijYtWEXcPa07A==
-  dependencies:
-    "@adraffy/ens-normalize" "1.10.1"
-    "@noble/curves" "1.2.0"
-    "@noble/hashes" "1.3.2"
-    "@types/node" "22.7.5"
-    aes-js "4.0.0-beta.5"
-    tslib "2.7.0"
-    ws "8.17.1"
-
 ethers@^6.15.0:
   version "6.16.0"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.16.0.tgz#fff9b4f05d7a359c774ad6e91085a800f7fccf65"
@@ -1319,17 +1306,17 @@ jsonpath@^1.1.1:
     static-eval "2.1.1"
     underscore "1.13.6"
 
-libsodium-wrappers@^0.7.10:
-  version "0.7.16"
-  resolved "https://registry.yarnpkg.com/libsodium-wrappers/-/libsodium-wrappers-0.7.16.tgz#abaa065e914562695c6c1d66527c8e72bbbaec15"
-  integrity sha512-Gtr/WBx4dKjvRL1pvfwZqu7gO6AfrQ0u9vFL+kXihtHf6NfkROR8pjYWn98MFDI3jN19Ii1ZUfPR9afGiPyfHg==
+libsodium-wrappers@^0.8.2:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/libsodium-wrappers/-/libsodium-wrappers-0.8.2.tgz#717042fb8ad62e2e4dada53795873a08c98e658c"
+  integrity sha512-VFLmfxkxo+U9q60tjcnSomQBRx2UzlRjKWJqvB4K1pUqsMQg4cu3QXA2nrcsj9A1qRsnJBbi2Ozx1hsiDoCkhw==
   dependencies:
-    libsodium "^0.7.16"
+    libsodium "^0.8.0"
 
-libsodium@^0.7.16:
-  version "0.7.16"
-  resolved "https://registry.yarnpkg.com/libsodium/-/libsodium-0.7.16.tgz#3d4f9d68ed887bb8bf2e76bb3ba231265eae58a0"
-  integrity sha512-3HrzSPuzm6Yt9aTYCDxYEG8x8/6C0+ag655Y7rhhWZM9PT4NpdnbqlzXhGZlDnkgR6MeSTnOt/VIyHLs9aSf+Q==
+libsodium@^0.8.0:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/libsodium/-/libsodium-0.8.2.tgz#eadd168d478729e8f1687da8b78a352c421fa0b1"
+  integrity sha512-TsnGYMoZtpweT+kR+lOv5TVsnJ/9U0FZOsLFzFOMWmxqOAYXjX3fsrPAW+i1LthgDKXJnI9A8dWEanT1tnJKIw==
 
 locate-path@^5.0.0:
   version "5.0.0"
