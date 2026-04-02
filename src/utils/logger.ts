@@ -1,4 +1,4 @@
-import { getERC20Token } from "@hinkal/common";
+import { getERC20Token } from "h_test_1";
 import { zeroAddress } from "viem";
 
 const SUPPRESS_SDK_LOGS = process.env.SUPPRESS_SDK_LOGS !== "false";

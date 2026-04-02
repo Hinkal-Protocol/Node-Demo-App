@@ -9,7 +9,7 @@
   },
   "private": true,
   "dependencies": {
-    "@hinkal/common": "0.2.23",
+    "h_test_1": "0.0.29",
     "ethers": "^6.15.0",
     "viem": "^2.43.3"
   },

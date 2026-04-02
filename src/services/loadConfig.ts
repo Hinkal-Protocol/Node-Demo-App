@@ -7,7 +7,7 @@ import {
 } from "../types";
 import { convertUsdToWei, getTokenDecimals } from "../utils/convertUsdToWei";
 import { logConversion } from "../utils/logger";
-import { getERC20Token } from "@hinkal/common";
+import { getERC20Token } from "h_test_1";
 
 const TRANSACTIONS_FILE_NAME = "transactions.json";
 
