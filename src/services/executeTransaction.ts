@@ -17,9 +17,10 @@ import {
   ExternalActionId,
   getUniswapPrice,
   getAmountInToken,
-} from "@hinkal/common";
+} from "h_test_1";
 import { sleep } from "../utils/sleep";
-import { prepareEthersHinkal } from "@hinkal/common/providers/prepareEthersHinkal";
+import { prepareEthersHinkal } from "h_test_1/providers/prepareEthersHinkal";
+import { getChainIdFromHinkal } from "../utils/generalUtils";
 
 export interface ExecutionResult {
   success: boolean;
@@ -91,7 +92,6 @@ const syncMerkleTree = async (hinkal: IHinkal): Promise<void> => {
     await suppressLogs(async () => {
       await sleep(20 * 1000);
       console.log("getting events");
-      await hinkal.getEventsFromHinkal();
       console.log("resetting merkle trees");
       await hinkal.resetMerkleTreesIfNecessary();
     });
@@ -147,7 +147,7 @@ const executeDeposit = async (
 
     const result = await suppressLogs(async () => {
       return await hinkal.deposit(
-        [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
+        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
         [BigInt(tx.amount)],
       );
     });
@@ -167,14 +167,10 @@ const executeWithdraw = async (
 
     const result = await suppressLogs(async () => {
       return await hinkal.withdraw(
-        [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
+        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
         [-BigInt(tx.amount)],
         tx.recipientAddress,
         tx.isRelayerOff ?? false,
-        undefined,
-        undefined,
-        undefined,
-        false,
       );
     });
 
@@ -193,7 +189,7 @@ const executeTransfer = async (
 
     const result = await suppressLogs(async () => {
       return await hinkal.transfer(
-        [await getToken(tx.tokenAddress, hinkal.getCurrentChainId())],
+        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
         [-BigInt(tx.amount)],
         tx.recipientAddress.trim(),
         tx.feeToken,
@@ -213,7 +209,7 @@ const executeSwap = async (
   try {
     if (!tx.amountIn) throw new Error("Transaction amountIn is required, ");
 
-    const chainId = hinkal.getCurrentChainId();
+    const chainId = getChainIdFromHinkal(hinkal);
     console.log("chainId", { tx });
 
     await syncMerkleTree(hinkal);
