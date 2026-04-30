@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { getTokenPrices, getERC20Token, zeroAddress } from "h_test_1";
+import { getTokenPrices, getERC20Token, zeroAddress } from "@hinkal/common";
 
 const getTokenPriceUsd = async (
   tokenAddress: string,
@@ -11,6 +11,7 @@ const getTokenPriceUsd = async (
     137: "polygon-pos",
     42161: "arbitrum-one",
     8453: "base",
+    5042002: "arcTestnet",
   };
 
   const platform = chainIdToPlatform[chainId];

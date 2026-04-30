@@ -9,7 +9,7 @@ import {
   logBatchFailure,
   logBatchComplete,
 } from "../utils/logger";
-import { networkRegistry } from "h_test_1";
+import { networkRegistry } from "@hinkal/common";
 
 export interface BatchProcessResult {
   jobId: string;

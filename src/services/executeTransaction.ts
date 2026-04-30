@@ -17,9 +17,9 @@ import {
   ExternalActionId,
   getUniswapPrice,
   getAmountInToken,
-} from "h_test_1";
+} from "@hinkal/common";
 import { sleep } from "../utils/sleep";
-import { prepareEthersHinkal } from "h_test_1/providers/prepareEthersHinkal";
+import { prepareEthersHinkal } from "@hinkal/common/providers/prepareEthersHinkal";
 import { getChainIdFromHinkal } from "../utils/generalUtils";
 
 export interface ExecutionResult {
