@@ -91,7 +91,6 @@ const syncMerkleTree = async (hinkal: IHinkal): Promise<void> => {
   try {
     await suppressLogs(async () => {
       await sleep(20 * 1000);
-      console.log("getting events");
       console.log("resetting merkle trees");
       await hinkal.resetMerkleTreesIfNecessary();
     });
