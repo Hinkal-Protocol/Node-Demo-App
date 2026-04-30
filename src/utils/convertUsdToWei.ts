@@ -11,6 +11,7 @@ const getTokenPriceUsd = async (
     137: "polygon-pos",
     42161: "arbitrum-one",
     8453: "base",
+    5042002: "arcTestnet",
   };
 
   const platform = chainIdToPlatform[chainId];
