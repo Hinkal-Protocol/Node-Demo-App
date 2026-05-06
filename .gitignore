@@ -45,3 +45,8 @@ transactions.json
 *.swo
 *~
 
+# Nx
+.nx/
+
+# Yarn
+.yarn/

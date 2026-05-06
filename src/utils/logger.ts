@@ -1,5 +1,5 @@
-import { getERC20Token } from "@hinkal/common";
 import { zeroAddress } from "viem";
+import { getErc20Token } from "@gurg/hi-test";
 
 const SUPPRESS_SDK_LOGS = process.env.SUPPRESS_SDK_LOGS !== "false";
 
@@ -142,21 +142,21 @@ export const logTransaction = (
   index: number,
   total: number,
   type: string,
-  id: string
+  id: string,
 ): void => {
   console.log("\n" + "=".repeat(60));
   console.log(`📝 [${index}/${total}] ${type.toUpperCase()}: ${id}`);
 };
 
-export const logWallet = (
+export const logWallet = async (
   address: string,
   balance: string,
-  chainId: number
-): void => {
-  const nativeToken = getERC20Token(zeroAddress, chainId);
+  chainId: number,
+): Promise<void> => {
+  const nativeToken = await getErc20Token(chainId, zeroAddress);
   console.log(`💰 Wallet: ${address}`);
   console.log(
-    `💵 Balance: ${balance} ${nativeToken.symbol} | Chain: ${chainId}`
+    `💵 Balance: ${balance} ${nativeToken?.symbol} | Chain: ${chainId}`,
   );
 };
 
@@ -164,17 +164,17 @@ export const logConversion = (
   usdAmount: string,
   convertedAmount: string,
   weiAmount: string,
-  tokenName: string
+  tokenName: string,
 ): void => {
   console.log(
-    `   💱 ${usdAmount} USD → ${convertedAmount} ${tokenName} (${weiAmount} wei)`
+    `   💱 ${usdAmount} USD → ${convertedAmount} ${tokenName} (${weiAmount} wei)`,
   );
 };
 
 export const logSuccess = (
   txHash: string,
   blockNumber?: number,
-  gasUsed?: string
+  gasUsed?: string,
 ): void => {
   console.log(`✅ Success! Transaction: ${txHash}`);
   if (blockNumber) {
@@ -193,7 +193,7 @@ export const logError = (message: string, details?: string): void => {
 export const logBatchStart = (
   jobId: string,
   transactionCount: number,
-  chainId: number
+  chainId: number,
 ): void => {
   console.log("\n" + "=".repeat(60));
   console.log(`🚀 Starting Batch Processing`);
@@ -206,7 +206,7 @@ export const logBatchStart = (
 export const logBatchComplete = (
   duration: string,
   completed: number,
-  total: number
+  total: number,
 ): void => {
   console.log("\n" + "=".repeat(60));
   console.log(`✅ Batch Completed Successfully!`);
@@ -219,7 +219,7 @@ export const logBatchFailure = (
   txId: string,
   index: number,
   total: number,
-  error: string
+  error: string,
 ): void => {
   console.error(`\n❌ Transaction failed: ${txId}`);
   console.error(`   Error: ${error}`);

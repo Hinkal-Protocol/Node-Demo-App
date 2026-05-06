@@ -9,7 +9,7 @@ import {
   logBatchFailure,
   logBatchComplete,
 } from "../utils/logger";
-import { networkRegistry } from "@hinkal/common";
+import { networkRegistry } from "../constants";
 
 export interface BatchProcessResult {
   jobId: string;
@@ -23,10 +23,7 @@ export interface BatchProcessResult {
 const providerCache = new Map<number, ethers.Provider>();
 const hinkalCache = new Map<string, any>();
 
-const getProvider = (
-  chainId: number,
-  rpcUrl: string
-): ethers.Provider => {
+const getProvider = (chainId: number, rpcUrl: string): ethers.Provider => {
   if (!providerCache.has(chainId)) {
     providerCache.set(chainId, new ethers.JsonRpcProvider(rpcUrl));
   }
@@ -45,7 +42,7 @@ const getHinkal = async (walletConfig: {
 };
 
 export const processBatch = async (
-  input: BatchTransactionInput
+  input: BatchTransactionInput,
 ): Promise<BatchProcessResult> => {
   const jobId = `batch-${Date.now()}`;
   const startTime = Date.now();
@@ -64,7 +61,7 @@ export const processBatch = async (
 
       if (!chainId)
         throw new Error(
-          `Transaction ${tx.id}: missing chainId (not specified in transaction or default)`
+          `Transaction ${tx.id}: missing chainId (not specified in transaction or default)`,
         );
 
       if (!tx.privateKey)

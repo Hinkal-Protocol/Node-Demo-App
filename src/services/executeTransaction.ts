@@ -12,15 +12,15 @@ import { suppressLogs } from "../utils/logger";
 import {
   IHinkal,
   ERC20Token,
-  getERC20Token,
-  networkRegistry,
+  getErc20Token,
   ExternalActionId,
   getUniswapPrice,
-  getAmountInToken,
-} from "@hinkal/common";
+  prepareEthersHinkal,
+} from "@gurg/hi-test";
 import { sleep } from "../utils/sleep";
-import { prepareEthersHinkal } from "@hinkal/common/providers/prepareEthersHinkal";
 import { getChainIdFromHinkal } from "../utils/generalUtils";
+import { networkRegistry } from "../constants";
+import { getAmountInToken } from "../utils/amount.utils";
 
 export interface ExecutionResult {
   success: boolean;
@@ -67,7 +67,7 @@ const getToken = async (
   chainId: number,
 ): Promise<ERC20Token> => {
   return (
-    getERC20Token(address, chainId) || {
+    getErc20Token(chainId, address) || {
       chainId,
       erc20TokenAddress: address,
       name: "Unknown",

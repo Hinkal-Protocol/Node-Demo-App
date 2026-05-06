@@ -5,17 +5,22 @@ import {
   BatchTransaction,
   BatchTransactionType,
 } from "../types";
-import { convertUsdToWei, getTokenDecimals } from "../utils/convertUsdToWei";
-import { logConversion } from "../utils/logger";
-import { getERC20Token } from "@hinkal/common";
 
 const TRANSACTIONS_FILE_NAME = "transactions.json";
 
 const REQUIRED_FIELDS: Record<BatchTransactionType, string[]> = {
-  [BatchTransactionType.Deposit]: ["tokenAddress"],
-  [BatchTransactionType.Withdraw]: ["tokenAddress", "recipientAddress"],
-  [BatchTransactionType.Transfer]: ["tokenAddress", "recipientAddress"],
-  [BatchTransactionType.Swap]: ["tokenIn", "tokenOut"],
+  [BatchTransactionType.Deposit]: ["tokenAddress", "amount"],
+  [BatchTransactionType.Withdraw]: [
+    "tokenAddress",
+    "recipientAddress",
+    "amount",
+  ],
+  [BatchTransactionType.Transfer]: [
+    "tokenAddress",
+    "recipientAddress",
+    "amount",
+  ],
+  [BatchTransactionType.Swap]: ["tokenIn", "tokenOut", "amountIn"],
 };
 
 const validateRequiredField = (tx: any, field: string, txId: string): void => {
@@ -30,7 +35,7 @@ const validateTransferRecipient = (recipient: string, txId: string): void => {
 
 const validateTransaction = async (
   tx: any,
-  defaultChainId: number
+  defaultChainId: number,
 ): Promise<BatchTransaction> => {
   const txId = tx.id || "unknown";
 
@@ -42,7 +47,7 @@ const validateTransaction = async (
   const requiredFields = REQUIRED_FIELDS[tx.type as BatchTransactionType];
   if (!requiredFields) {
     throw new Error(
-      `Transaction ${txId}: Unknown transaction type '${tx.type}'`
+      `Transaction ${txId}: Unknown transaction type '${tx.type}'`,
     );
   }
 
@@ -56,80 +61,26 @@ const validateTransaction = async (
   const chainId = tx.chainId || defaultChainId;
   if (!chainId)
     throw new Error(
-      `Transaction ${txId}: missing 'chainId' (not specified in transaction or default)`
+      `Transaction ${txId}: missing 'chainId' (not specified in transaction or default)`,
     );
 
   const processedTx = { ...tx, chainId };
 
-  if (tx.amountInUsds) {
-    const isSwap = tx.type === BatchTransactionType.Swap;
-    const tokenAddress = isSwap ? tx.tokenIn : tx.tokenAddress;
-    const amountField = isSwap ? "amountIn" : "amount";
+  const amountField =
+    tx.type === BatchTransactionType.Swap ? "amountIn" : "amount";
+  const amountValue = processedTx[amountField];
 
-    const decimals = await getTokenDecimals(tokenAddress, chainId);
-    const weiAmount = await convertUsdToWei(
-      tx.amountInUsds,
-      tokenAddress,
-      chainId,
-      decimals
+  if (!amountValue || typeof amountValue !== "string") {
+    throw new Error(
+      `Transaction ${txId}: '${amountField}' must be a valid string`,
     );
-    (processedTx as any)[amountField] = weiAmount;
-    const weiFormatted = BigInt(weiAmount).toString();
-    const ethFormatted = (Number(weiAmount) / Math.pow(10, decimals)).toFixed(
-      6
-    );
-    logConversion(
-      tx.amountInUsds,
-      ethFormatted,
-      weiFormatted,
-      getERC20Token(tokenAddress, chainId).symbol
-    );
-  } else {
-    if (tx.type === BatchTransactionType.Swap) {
-      if (tx.amountIn) {
-        processedTx.amountIn = tx.amountIn;
-      } else {
-        throw new Error(
-          `Transaction ${txId}: must provide either 'amountIn' (in wei) or 'amountInUsds' (in USD)`
-        );
-      }
-    } else {
-      if (tx.amount) {
-        processedTx.amount = tx.amount;
-      } else {
-        throw new Error(
-          `Transaction ${txId}: must provide either 'amount' (in wei) or 'amountInUsds' (in USD)`
-        );
-      }
-    }
   }
-
-  if (tx.type === BatchTransactionType.Swap) {
-    if (!processedTx.amountIn || typeof processedTx.amountIn !== "string") {
-      throw new Error(
-        `Transaction ${txId}: 'amountIn' must be a valid string after processing`
-      );
-    }
-    try {
-      BigInt(processedTx.amountIn);
-    } catch (error) {
-      throw new Error(
-        `Transaction ${txId}: 'amountIn' value '${processedTx.amountIn}' cannot be converted to BigInt`
-      );
-    }
-  } else {
-    if (!processedTx.amount || typeof processedTx.amount !== "string") {
-      throw new Error(
-        `Transaction ${txId}: 'amount' must be a valid string after processing`
-      );
-    }
-    try {
-      BigInt(processedTx.amount);
-    } catch (error) {
-      throw new Error(
-        `Transaction ${txId}: 'amount' value '${processedTx.amount}' cannot be converted to BigInt`
-      );
-    }
+  try {
+    BigInt(amountValue);
+  } catch {
+    throw new Error(
+      `Transaction ${txId}: '${amountField}' value '${amountValue}' cannot be converted to BigInt`,
+    );
   }
 
   return processedTx as BatchTransaction;
@@ -156,7 +107,7 @@ const parseChainId = (chainId: unknown): number | null => {
 };
 
 const validateConfigStructure = (
-  data: any
+  data: any,
 ): data is { chainId: unknown; transactions: unknown[] } => {
   if (!Array.isArray(data.transactions)) {
     console.error("Error: 'transactions' array is missing in ", {

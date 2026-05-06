@@ -9,7 +9,7 @@
   },
   "private": true,
   "dependencies": {
-    "@hinkal/common": "0.2.31",
+    "@gurg/hi-test": "0.1.42",
     "ethers": "^6.15.0",
     "viem": "^2.43.3"
   },
