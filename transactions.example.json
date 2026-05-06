@@ -6,7 +6,7 @@
       "type": "deposit",
       "privateKey": "<YOUR_PRIVATE_KEY>",
       "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-      "amountInUsds": "0.2"
+      "amount": "200000"
     },
     {
       "id": "test-swap-001",
@@ -14,7 +14,7 @@
       "privateKey": "<YOUR_PRIVATE_KEY>",
       "tokenIn": "0x0000000000000000000000000000000000000000",
       "tokenOut": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-      "amountInUsds": "0.1",
+      "amountIn": "100000000000000000",
       "feeToken": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063"
     },
     {
@@ -22,7 +22,7 @@
       "type": "transfer",
       "privateKey": "<YOUR_PRIVATE_KEY>",
       "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-      "amountInUsds": "0.1",
+      "amount": "100000",
       "recipientAddress": "<HINKAL_RECIPIENT_ADDRESS_5_PARTS>",
       "feeToken": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
     },
@@ -31,10 +31,9 @@
       "type": "withdraw",
       "privateKey": "<YOUR_PRIVATE_KEY>",
       "tokenAddress": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-      "amountInUsds": "0.03",
+      "amount": "30000",
       "recipientAddress": "<RECIPIENT_ETH_ADDRESS>",
       "isRelayerOff": true
     }
   ]
 }
-
