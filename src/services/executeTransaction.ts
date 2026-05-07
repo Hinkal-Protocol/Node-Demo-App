@@ -16,6 +16,7 @@ import {
   ExternalActionId,
   getUniswapPrice,
   prepareEthersHinkal,
+  getFeeStructure,
 } from "@gurg/hi-test";
 import { sleep } from "../utils/sleep";
 import { getChainIdFromHinkal } from "../utils/generalUtils";
@@ -30,6 +31,24 @@ export interface ExecutionResult {
   error?: string;
   result?: any;
 }
+
+const getFee = async (
+  hinkal: IHinkal,
+  tokenAddress: string,
+  actionId: ExternalActionId = ExternalActionId.Transact,
+) => {
+  const chainId = getChainIdFromHinkal(hinkal);
+  try {
+    return await getFeeStructure(
+      chainId,
+      tokenAddress,
+      [tokenAddress],
+      actionId,
+    );
+  } catch {
+    return undefined;
+  }
+};
 
 const handleResponse = async (tx: any): Promise<ExecutionResult> => {
   if (typeof tx === "bigint")
@@ -163,13 +182,17 @@ const executeWithdraw = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
+    const token = await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal));
+    const fee = await getFee(hinkal, tx.tokenAddress);
 
     const result = await suppressLogs(async () => {
       return await hinkal.withdraw(
-        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
+        [token],
         [-BigInt(tx.amount)],
         tx.recipientAddress,
         tx.isRelayerOff ?? false,
+        tx.feeToken,
+        fee,
       );
     });
 
@@ -185,13 +208,16 @@ const executeTransfer = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
+    const token = await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal));
+    const fee = await getFee(hinkal, tx.tokenAddress);
 
     const result = await suppressLogs(async () => {
       return await hinkal.transfer(
-        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
+        [token],
         [-BigInt(tx.amount)],
         tx.recipientAddress.trim(),
         tx.feeToken,
+        fee,
       );
     });
 
@@ -217,6 +243,7 @@ const executeSwap = async (
 
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
+    const fee = await getFee(hinkal, tx.tokenIn, ExternalActionId.Uniswap);
 
     const priceDict = await getUniswapPrice(
       hinkal,
@@ -234,6 +261,7 @@ const executeSwap = async (
       ExternalActionId.Uniswap,
       priceDict.poolFee,
       tx.feeToken,
+      fee,
     );
 
     console.log("after transaction", { result });
