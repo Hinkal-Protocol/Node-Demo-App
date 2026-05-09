@@ -34,15 +34,16 @@ export interface ExecutionResult {
 
 const getFee = async (
   hinkal: IHinkal,
-  tokenAddress: string,
-  actionId: ExternalActionId = ExternalActionId.Transact,
+  feeTokenAddress: string,
+  actionId: ExternalActionId,
+  tokenAddresses: string[],
 ) => {
   const chainId = getChainIdFromHinkal(hinkal);
   try {
     return await getFeeStructure(
       chainId,
-      tokenAddress,
-      [tokenAddress],
+      feeTokenAddress,
+      tokenAddresses,
       actionId,
     );
   } catch {
@@ -183,7 +184,12 @@ const executeWithdraw = async (
   try {
     await syncMerkleTree(hinkal);
     const token = await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal));
-    const fee = await getFee(hinkal, tx.tokenAddress);
+    const fee = await getFee(
+      hinkal,
+      tx.tokenAddress,
+      ExternalActionId.Transact,
+      [tx.tokenAddress],
+    );
 
     const result = await suppressLogs(async () => {
       return await hinkal.withdraw(
@@ -209,7 +215,12 @@ const executeTransfer = async (
   try {
     await syncMerkleTree(hinkal);
     const token = await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal));
-    const fee = await getFee(hinkal, tx.tokenAddress);
+    const fee = await getFee(
+      hinkal,
+      tx.tokenAddress,
+      ExternalActionId.Transact,
+      [tx.tokenAddress],
+    );
 
     const result = await suppressLogs(async () => {
       return await hinkal.transfer(
@@ -243,7 +254,10 @@ const executeSwap = async (
 
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
-    const fee = await getFee(hinkal, tx.tokenIn, ExternalActionId.Uniswap);
+    const fee = await getFee(hinkal, tx.tokenIn, ExternalActionId.Uniswap, [
+      tx.tokenIn,
+      tx.tokenOut,
+    ]);
 
     const priceDict = await getUniswapPrice(
       hinkal,
