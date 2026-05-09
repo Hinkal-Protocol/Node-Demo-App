@@ -186,7 +186,7 @@ const executeWithdraw = async (
     const token = await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal));
     const fee = await getFee(
       hinkal,
-      tx.tokenAddress,
+      tx.feeToken ?? tx.tokenAddress,
       ExternalActionId.Transact,
       [tx.tokenAddress],
     );
@@ -197,7 +197,7 @@ const executeWithdraw = async (
         [-BigInt(tx.amount)],
         tx.recipientAddress,
         tx.isRelayerOff ?? false,
-        tx.feeToken,
+        fee?.feeToken ?? tx.feeToken,
         fee,
       );
     });
@@ -217,7 +217,7 @@ const executeTransfer = async (
     const token = await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal));
     const fee = await getFee(
       hinkal,
-      tx.tokenAddress,
+      tx.feeToken ?? tx.tokenAddress,
       ExternalActionId.Transact,
       [tx.tokenAddress],
     );
@@ -227,7 +227,7 @@ const executeTransfer = async (
         [token],
         [-BigInt(tx.amount)],
         tx.recipientAddress.trim(),
-        tx.feeToken,
+        fee?.feeToken ?? tx.feeToken,
         fee,
       );
     });
@@ -254,10 +254,12 @@ const executeSwap = async (
 
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
-    const fee = await getFee(hinkal, tx.tokenIn, ExternalActionId.Uniswap, [
-      tx.tokenIn,
-      tx.tokenOut,
-    ]);
+    const fee = await getFee(
+      hinkal,
+      tx.feeToken ?? tx.tokenIn,
+      ExternalActionId.Uniswap,
+      [tx.tokenIn, tx.tokenOut],
+    );
 
     const priceDict = await getUniswapPrice(
       hinkal,
@@ -274,7 +276,7 @@ const executeSwap = async (
       [-BigInt(tx.amountIn), 0n],
       ExternalActionId.Uniswap,
       priceDict.poolFee,
-      tx.feeToken,
+      fee?.feeToken ?? tx.feeToken,
       fee,
     );
 
