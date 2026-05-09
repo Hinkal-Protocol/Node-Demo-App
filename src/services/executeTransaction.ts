@@ -15,13 +15,13 @@ import {
   getErc20Token,
   ExternalActionId,
   getUniswapPrice,
-  prepareEthersHinkal,
   getFeeStructure,
 } from "@gurg/hi-test";
 import { sleep } from "../utils/sleep";
 import { getChainIdFromHinkal } from "../utils/generalUtils";
 import { networkRegistry } from "../constants";
 import { getAmountInToken } from "../utils/amount.utils";
+import { prepareEthersHinkal } from "@gurg/hi-test/functions/providers/prepareEthersHinkal";
 
 export interface ExecutionResult {
   success: boolean;

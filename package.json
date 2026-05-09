@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "tsx src/index.ts",
-    "serve": "tsx src/index.ts",
+    "start": "ts-node src/index.ts",
+    "serve": "ts-node src/index.ts",
     "build": "tsc"
   },
   "private": true,
@@ -12,18 +12,14 @@
     "multiformats": "9.9.0"
   },
   "dependencies": {
-    "@gurg/hi-test": "0.1.42",
-    "@tanstack/react-query": "^5.100.9",
+    "@gurg/hi-test": "0.1.54",
     "ethers": "^6.15.0",
-    "multiformats": "9.9.0",
-    "viem": "^2.48.8",
-    "wagmi": "2.13.3"
+    "viem": "^2.43.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.2",
-    "tsx": "^4.21.0",
     "typescript": "^5.3.3"
   }
 }
