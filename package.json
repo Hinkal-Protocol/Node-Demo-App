@@ -12,7 +12,7 @@
     "multiformats": "9.9.0"
   },
   "dependencies": {
-    "@gurg/hi-test": "0.1.54",
+    "@gurg/hi-test": "0.1.56",
     "ethers": "^6.15.0",
     "viem": "^2.43.3"
   },
