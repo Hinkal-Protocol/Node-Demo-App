@@ -7,6 +7,10 @@ const originalLog = console.log;
 const originalWarn = console.warn;
 const originalError = console.error;
 
+export const logAlways = (...args: unknown[]): void => {
+  originalLog(...args);
+};
+
 const isVerboseSDKLog = (args: any[]): boolean => {
   if (args.length === 0) return false;
 

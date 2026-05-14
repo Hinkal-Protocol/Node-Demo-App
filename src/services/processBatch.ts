@@ -10,6 +10,8 @@ import {
   logBatchComplete,
 } from "../utils/logger";
 import { networkRegistry } from "../constants";
+import { attachPrivateBalancesStoreConsoleLogger } from "./privateBalances";
+import { refreshBalance } from "@gurg/hi-test";
 
 export interface BatchProcessResult {
   jobId: string;
@@ -36,7 +38,10 @@ const getHinkal = async (walletConfig: {
 }): Promise<any> => {
   const key = `${walletConfig.privateKey}-${walletConfig.chainId}`;
   if (!hinkalCache.has(key)) {
-    hinkalCache.set(key, await initializeHinkal(walletConfig));
+    const hinkal = await initializeHinkal(walletConfig);
+    attachPrivateBalancesStoreConsoleLogger(hinkal);
+    refreshBalance({ chainIdToUpdate: walletConfig.chainId });
+    hinkalCache.set(key, hinkal);
   }
   return hinkalCache.get(key)!;
 };
@@ -76,7 +81,7 @@ export const processBatch = async (
       const balanceNative = ethers.formatEther(balance);
 
       logTransaction(i + 1, input.transactions.length, tx.type, tx.id);
-      logWallet(walletAddress, balanceNative, chainId);
+      await logWallet(walletAddress, balanceNative, chainId);
 
       const walletConfig = {
         privateKey: tx.privateKey,
