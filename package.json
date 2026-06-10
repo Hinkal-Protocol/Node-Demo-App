@@ -9,8 +9,7 @@
   },
   "private": true,
   "dependencies": {
-    "@hinkal/common": "0.2.32",
-    "blake-hash": "^2.0.0",
+    "@hinkal/common": "0.2.33",
     "ethers": "^6.15.0",
     "viem": "^2.43.3"
   },
