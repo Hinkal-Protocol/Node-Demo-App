@@ -84,18 +84,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hinkal/common@npm:0.2.31":
-  version: 0.2.31
-  resolution: "@hinkal/common@npm:0.2.31"
+"@hinkal/common@npm:0.2.32":
+  version: 0.2.32
+  resolution: "@hinkal/common@npm:0.2.32"
   dependencies:
     "@coral-xyz/anchor": "npm:^0.31.0"
+    "@noble/curves": "npm:^1.9.7"
+    "@noble/hashes": "npm:^1.8.0"
     "@solana/spl-token": "npm:^0.4.14"
     "@solana/web3.js": "npm:^1.98.4"
     async-mutex: "npm:^0.4.0"
     axios: "npm:^1.15.0"
+    bip39: "npm:^3.1.0"
     bs58: "npm:^6.0.0"
     buffer: "npm:6.0.3"
-    circomlibjs-hinkal-fork: "npm:^0.0.3"
+    circomlibjs-hinkal-fork: "npm:^0.0.8"
     dotenv: "npm:^16.4.5"
     ethers: "npm:^6.15.0"
     idb-keyval: "npm:6.2.1"
@@ -117,7 +120,7 @@ __metadata:
       optional: true
     wagmi:
       optional: true
-  checksum: 10c0/0705f9438536141eb61eb02ed4b325ae2e58e4e0107a10512258ed226a8539eed94b0b59210e23dd8585aea5f5799898f3a3b3b4099cddd28f2a409b062d06ca
+  checksum: 10c0/82abbd808d791e82110a56cacd62136d347a2497979e8553caddd7c6410ac6d576e6575ca0dddc06ea6d2dc59ea69a77ca6ac7e9b0eb30650534efb36e62a5a1
   languageName: node
   linkType: hard
 
@@ -205,7 +208,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/curves@npm:^1.4.2, @noble/curves@npm:~1.9.0":
+"@noble/curves@npm:^1.4.2, @noble/curves@npm:^1.9.7, @noble/curves@npm:~1.9.0":
   version: 1.9.7
   resolution: "@noble/curves@npm:1.9.7"
   dependencies:
@@ -228,7 +231,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/hashes@npm:1.8.0, @noble/hashes@npm:^1.3.1, @noble/hashes@npm:^1.4.0, @noble/hashes@npm:^1.8.0, @noble/hashes@npm:~1.8.0":
+"@noble/hashes@npm:1.8.0, @noble/hashes@npm:^1.2.0, @noble/hashes@npm:^1.3.1, @noble/hashes@npm:^1.4.0, @noble/hashes@npm:^1.8.0, @noble/hashes@npm:~1.8.0":
   version: 1.8.0
   resolution: "@noble/hashes@npm:1.8.0"
   checksum: 10c0/06a0b52c81a6fa7f04d67762e08b2c476a00285858150caeaaff4037356dd5e119f45b2a530f638b77a5eeca013168ec1b655db41bae3236cb2e9d511484fc77
@@ -804,6 +807,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bip39@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "bip39@npm:3.1.0"
+  dependencies:
+    "@noble/hashes": "npm:^1.2.0"
+  checksum: 10c0/68f9673a0d6a851e9635f3af8a85f2a1ecef9066c76d77e6f0d58d274b5bf22a67f429da3997e07c0d2cf153a4d7321f9273e656cac0526f667575ddee28ef71
+  languageName: node
+  linkType: hard
+
 "blake2b-wasm@npm:^2.4.0":
   version: 2.4.0
   resolution: "blake2b-wasm@npm:2.4.0"
@@ -942,12 +954,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"circomlibjs-hinkal-fork@npm:^0.0.3":
-  version: 0.0.3
-  resolution: "circomlibjs-hinkal-fork@npm:0.0.3"
+"circomlibjs-hinkal-fork@npm:^0.0.8":
+  version: 0.0.8
+  resolution: "circomlibjs-hinkal-fork@npm:0.0.8"
   dependencies:
     ffjavascript: "npm:^0.3.0"
-  checksum: 10c0/d2fafc7ef4fe359aacb299b8d222f60ac5b2803631cd63229ba40e4974e94a6fccad1e44acc28329f512d04bc7daaccae7d01163fc0cc196438b97c05a13505a
+  checksum: 10c0/83a7e2e01c470f6792e1930d7c0f82acd3a48d3575fdcc9b607536cc0e6bd52972591b47951c68c2869f642cf5649b60037a7909a5303bb1a352a1e4a4ca6ccc
   languageName: node
   linkType: hard
 
@@ -1406,7 +1418,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "hinkal-demo-app@workspace:."
   dependencies:
-    "@hinkal/common": "npm:0.2.31"
+    "@hinkal/common": "npm:0.2.32"
     "@types/node": "npm:^20.11.0"
     ethers: "npm:^6.15.0"
     ts-node: "npm:^10.9.2"
