@@ -1,5 +1,5 @@
 import { zeroAddress } from "viem";
-import { getErc20Token } from "@gurg/hi-test";
+import { findToken } from "../constants/token-data";
 
 const SUPPRESS_SDK_LOGS = process.env.SUPPRESS_SDK_LOGS !== "false";
 
@@ -157,7 +157,7 @@ export const logWallet = async (
   balance: string,
   chainId: number,
 ): Promise<void> => {
-  const nativeToken = await getErc20Token(chainId, zeroAddress);
+  const nativeToken = findToken(chainId, zeroAddress);
   console.log(`💰 Wallet: ${address}`);
   console.log(
     `💵 Balance: ${balance} ${nativeToken?.symbol} | Chain: ${chainId}`,

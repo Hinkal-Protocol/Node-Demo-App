@@ -1,10 +1,7 @@
-import {
-  IHinkal,
-  refreshBalance,
-  type PrivateBalancesState,
-} from "@gurg/hi-test";
+import { IHinkal, type PrivateBalancesState } from "@hinkal/common";
 import { getAmountInToken } from "../utils/amount.utils";
 import { logAlways } from "../utils/logger";
+import { findToken } from "../constants/token-data";
 
 function formatPrivateBalances(state: PrivateBalancesState): string {
   const ids = Object.keys(state)
@@ -17,10 +14,12 @@ function formatPrivateBalances(state: PrivateBalancesState): string {
       if (!rows?.length) return `chain ${cid}: (none)`;
       const line = rows
         .filter((b) => b.balance > 0n)
-        .map(
-          (b) =>
-            `${b.token.symbol}=${getAmountInToken(b.token, b.balance)} (~$${(b.usdValue ?? 0).toFixed(2)})`,
-        )
+        .map((b) => {
+          const token = findToken(cid, b.erc20Address);
+          if (!token) return "Unknown token";
+          const amount = getAmountInToken(token, b.balance);
+          return `${token.symbol}=${amount} (~$${(b.usdValue ?? 0).toFixed(2)})`;
+        })
         .join(" | ");
       return line ? `chain ${cid}: ${line}` : `chain ${cid}: (none)`;
     })

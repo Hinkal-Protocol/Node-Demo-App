@@ -1,4 +1,4 @@
-import { IHinkal } from "@gurg/hi-test";
+import { IHinkal } from "@hinkal/common";
 
 export const getChainIdFromHinkal = (hinkal: IHinkal) => {
   const providerAdapter = hinkal.getProviderAdapter();

@@ -9,19 +9,15 @@ import {
   WithdrawTransaction,
 } from "../types";
 import { suppressLogs } from "../utils/logger";
-import {
-  IHinkal,
-  ERC20Token,
-  getErc20Token,
-  ExternalActionId,
-  getUniswapPrice,
-  getFeeStructure,
-} from "@gurg/hi-test";
+import { IHinkal, ExternalActionId } from "@hinkal/common";
 import { sleep } from "../utils/sleep";
 import { getChainIdFromHinkal } from "../utils/generalUtils";
 import { networkRegistry } from "../constants";
 import { getAmountInToken } from "../utils/amount.utils";
-import { prepareEthersHinkal } from "@gurg/hi-test/providers/prepareEthersHinkal";
+import { prepareEthersHinkal } from "@hinkal/common/providers/prepareEthersHinkal";
+import { findToken } from "../constants/token-data";
+import { pickBestEvmSwapQuote } from "../utils/swap.utils";
+import { Token } from "../types";
 
 export interface ExecutionResult {
   success: boolean;
@@ -40,7 +36,7 @@ const getFee = async (
 ) => {
   const chainId = getChainIdFromHinkal(hinkal);
   try {
-    return await getFeeStructure(
+    return await hinkal.getFeeStructure(
       chainId,
       feeTokenAddress,
       tokenAddresses,
@@ -82,12 +78,9 @@ const handleResponse = async (tx: any): Promise<ExecutionResult> => {
   };
 };
 
-const getToken = async (
-  address: string,
-  chainId: number,
-): Promise<ERC20Token> => {
+const getToken = async (address: string, chainId: number): Promise<Token> => {
   return (
-    getErc20Token(chainId, address) || {
+    findToken(chainId, address) || {
       chainId,
       erc20TokenAddress: address,
       name: "Unknown",
@@ -163,10 +156,12 @@ const executeDeposit = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
+    const chainId = getChainIdFromHinkal(hinkal);
 
     const result = await suppressLogs(async () => {
       return await hinkal.deposit(
-        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
+        chainId,
+        [tx.tokenAddress],
         [BigInt(tx.amount)],
       );
     });
@@ -183,7 +178,7 @@ const executeWithdraw = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
-    const token = await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal));
+    const chainId = getChainIdFromHinkal(hinkal);
     const fee = await getFee(
       hinkal,
       tx.feeToken ?? tx.tokenAddress,
@@ -193,7 +188,8 @@ const executeWithdraw = async (
 
     const result = await suppressLogs(async () => {
       return await hinkal.withdraw(
-        [token],
+        chainId,
+        [tx.tokenAddress],
         [-BigInt(tx.amount)],
         tx.recipientAddress,
         tx.isRelayerOff ?? false,
@@ -214,7 +210,7 @@ const executeTransfer = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
-    const token = await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal));
+    const chainId = getChainIdFromHinkal(hinkal);
     const fee = await getFee(
       hinkal,
       tx.feeToken ?? tx.tokenAddress,
@@ -224,7 +220,8 @@ const executeTransfer = async (
 
     const result = await suppressLogs(async () => {
       return await hinkal.transfer(
-        [token],
+        chainId,
+        [tx.tokenAddress],
         [-BigInt(tx.amount)],
         tx.recipientAddress.trim(),
         fee?.feeToken ?? tx.feeToken,
@@ -261,21 +258,23 @@ const executeSwap = async (
       [tx.tokenIn, tx.tokenOut],
     );
 
-    const priceDict = await getUniswapPrice(
-      hinkal,
+    const quotes = await hinkal.getEvmSwapPrices(
       chainId,
       getAmountInToken(tokenIn, BigInt(tx.amountIn)),
-      tokenIn,
-      tokenOut,
+      tx.tokenIn,
+      tx.tokenOut,
     );
+    const bestQuote = pickBestEvmSwapQuote(quotes);
+    if (!bestQuote) throw new Error("No swap quote available");
 
-    console.log({ tokenIn, tokenOut, priceDict });
+    console.log({ tokenIn, tokenOut, bestQuote });
 
     const result = await hinkal.swap(
-      [tokenIn, tokenOut],
-      [-BigInt(tx.amountIn), 0n],
-      ExternalActionId.Uniswap,
-      priceDict.poolFee,
+      chainId,
+      [tx.tokenIn, tx.tokenOut],
+      [-BigInt(tx.amountIn), bestQuote.outSwapAmount],
+      bestQuote.externalActionId,
+      bestQuote.swapData,
       fee?.feeToken ?? tx.feeToken,
       fee,
     );

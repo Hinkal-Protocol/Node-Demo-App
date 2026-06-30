@@ -1,3 +1,12 @@
+export type Token = {
+  chainId: number;
+  erc20TokenAddress: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  logoURI?: string;
+};
+
 export enum BatchTransactionType {
   Deposit = "deposit",
   Withdraw = "withdraw",

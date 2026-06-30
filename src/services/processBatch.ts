@@ -11,7 +11,6 @@ import {
 } from "../utils/logger";
 import { networkRegistry } from "../constants";
 import { attachPrivateBalancesStoreConsoleLogger } from "./privateBalances";
-import { refreshBalance } from "@gurg/hi-test";
 
 export interface BatchProcessResult {
   jobId: string;
@@ -40,7 +39,7 @@ const getHinkal = async (walletConfig: {
   if (!hinkalCache.has(key)) {
     const hinkal = await initializeHinkal(walletConfig);
     attachPrivateBalancesStoreConsoleLogger(hinkal);
-    refreshBalance({ chainIdToUpdate: walletConfig.chainId });
+    hinkal.refreshBalance({ chainIdToUpdate: walletConfig.chainId });
     hinkalCache.set(key, hinkal);
   }
   return hinkalCache.get(key)!;

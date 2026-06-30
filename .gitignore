@@ -47,6 +47,7 @@ transactions.json
 
 # Nx
 .nx/
+.yarn
 
 # Yarn
 .yarn/

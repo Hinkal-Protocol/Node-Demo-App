@@ -1,10 +1,10 @@
-import { ERC20Token } from "@gurg/hi-test";
 import { ethers } from "ethers";
+import { Token } from "../types";
 
-export const getAmountInToken = (token: ERC20Token, amount: bigint): string =>
+export const getAmountInToken = (token: Token, amount: bigint): string =>
   ethers.formatUnits(amount, token.decimals);
 
-export const getAmountInWei = (token: ERC20Token, amount: string): bigint => {
+export const getAmountInWei = (token: Token, amount: string): bigint => {
   const decimalsToRemove = 10 ** (18 - token.decimals);
   try {
     return ethers.parseUnits(amount) / BigInt(decimalsToRemove);
