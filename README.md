@@ -40,14 +40,14 @@ The processor will validate the config, then execute each transaction in order. 
 
 ## Transaction Types
 
-Each transaction requires `id`, `type`, and `privateKey`. Amounts can be specified in USD (`amountInUsds`) or wei (`amount` / `amountIn`).
+Each transaction requires `id`, `type`, and `privateKey`. Amounts must be specified in wei (`amount` for deposit/withdraw/transfer, `amountIn` for swap).
 
 | Type       | Required fields                              |
-|------------|----------------------------------------------|
-| `deposit`  | `tokenAddress`, `amount` or `amountInUsds`   |
-| `withdraw` | `tokenAddress`, `recipientAddress`, `amount` or `amountInUsds` |
-| `transfer` | `tokenAddress`, `recipientAddress`, `amount` or `amountInUsds` |
-| `swap`     | `tokenIn`, `tokenOut`, `amountIn` or `amountInUsds` |
+| ---------- | -------------------------------------------- |
+| `deposit`  | `tokenAddress`, `amount`                     |
+| `withdraw` | `tokenAddress`, `recipientAddress`, `amount` |
+| `transfer` | `tokenAddress`, `recipientAddress`, `amount` |
+| `swap`     | `tokenIn`, `tokenOut`, `amountIn`            |
 
 ## Project Structure
 

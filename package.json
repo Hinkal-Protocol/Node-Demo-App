@@ -8,8 +8,11 @@
     "build": "tsc"
   },
   "private": true,
+  "resolutions": {
+    "multiformats": "9.9.0"
+  },
   "dependencies": {
-    "@hinkal/common": "0.2.39",
+    "@hinkal/common": "0.3.1",
     "ethers": "^6.15.0",
     "viem": "^2.43.3"
   },

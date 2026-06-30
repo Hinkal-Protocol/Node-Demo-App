@@ -9,18 +9,15 @@ import {
   WithdrawTransaction,
 } from "../types";
 import { suppressLogs } from "../utils/logger";
-import {
-  IHinkal,
-  ERC20Token,
-  getERC20Token,
-  networkRegistry,
-  ExternalActionId,
-  getUniswapPrice,
-  getAmountInToken,
-} from "@hinkal/common";
+import { IHinkal, ExternalActionId } from "@hinkal/common";
 import { sleep } from "../utils/sleep";
-import { prepareEthersHinkal } from "@hinkal/common/providers/prepareEthersHinkal";
 import { getChainIdFromHinkal } from "../utils/generalUtils";
+import { networkRegistry } from "../constants";
+import { getAmountInToken } from "../utils/amount.utils";
+import { prepareEthersHinkal } from "@hinkal/common/providers/prepareEthersHinkal";
+import { findToken } from "../constants/token-data";
+import { pickBestEvmSwapQuote } from "../utils/swap.utils";
+import { Token } from "../types";
 
 export interface ExecutionResult {
   success: boolean;
@@ -30,6 +27,25 @@ export interface ExecutionResult {
   error?: string;
   result?: any;
 }
+
+const getFee = async (
+  hinkal: IHinkal,
+  feeTokenAddress: string,
+  actionId: ExternalActionId,
+  tokenAddresses: string[],
+) => {
+  const chainId = getChainIdFromHinkal(hinkal);
+  try {
+    return await hinkal.getFeeStructure(
+      chainId,
+      feeTokenAddress,
+      tokenAddresses,
+      actionId,
+    );
+  } catch {
+    return undefined;
+  }
+};
 
 const handleResponse = async (tx: any): Promise<ExecutionResult> => {
   if (typeof tx === "bigint")
@@ -62,12 +78,9 @@ const handleResponse = async (tx: any): Promise<ExecutionResult> => {
   };
 };
 
-const getToken = async (
-  address: string,
-  chainId: number,
-): Promise<ERC20Token> => {
+const getToken = async (address: string, chainId: number): Promise<Token> => {
   return (
-    getERC20Token(address, chainId) || {
+    findToken(chainId, address) || {
       chainId,
       erc20TokenAddress: address,
       name: "Unknown",
@@ -143,10 +156,12 @@ const executeDeposit = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
+    const chainId = getChainIdFromHinkal(hinkal);
 
     const result = await suppressLogs(async () => {
       return await hinkal.deposit(
-        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
+        chainId,
+        [tx.tokenAddress],
         [BigInt(tx.amount)],
       );
     });
@@ -163,13 +178,23 @@ const executeWithdraw = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
+    const chainId = getChainIdFromHinkal(hinkal);
+    const fee = await getFee(
+      hinkal,
+      tx.feeToken ?? tx.tokenAddress,
+      ExternalActionId.Transact,
+      [tx.tokenAddress],
+    );
 
     const result = await suppressLogs(async () => {
       return await hinkal.withdraw(
-        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
+        chainId,
+        [tx.tokenAddress],
         [-BigInt(tx.amount)],
         tx.recipientAddress,
         tx.isRelayerOff ?? false,
+        fee?.feeToken ?? tx.feeToken,
+        fee,
       );
     });
 
@@ -185,13 +210,22 @@ const executeTransfer = async (
 ): Promise<ExecutionResult> => {
   try {
     await syncMerkleTree(hinkal);
+    const chainId = getChainIdFromHinkal(hinkal);
+    const fee = await getFee(
+      hinkal,
+      tx.feeToken ?? tx.tokenAddress,
+      ExternalActionId.Transact,
+      [tx.tokenAddress],
+    );
 
     const result = await suppressLogs(async () => {
       return await hinkal.transfer(
-        [await getToken(tx.tokenAddress, getChainIdFromHinkal(hinkal))],
+        chainId,
+        [tx.tokenAddress],
         [-BigInt(tx.amount)],
         tx.recipientAddress.trim(),
-        tx.feeToken,
+        fee?.feeToken ?? tx.feeToken,
+        fee,
       );
     });
 
@@ -217,23 +251,32 @@ const executeSwap = async (
 
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
-
-    const priceDict = await getUniswapPrice(
+    const fee = await getFee(
       hinkal,
-      chainId,
-      getAmountInToken(tokenIn, BigInt(tx.amountIn)),
-      tokenIn,
-      tokenOut,
+      tx.feeToken ?? tx.tokenIn,
+      ExternalActionId.Uniswap,
+      [tx.tokenIn, tx.tokenOut],
     );
 
-    console.log({ tokenIn, tokenOut, priceDict });
+    const quotes = await hinkal.getEvmSwapPrices(
+      chainId,
+      getAmountInToken(tokenIn, BigInt(tx.amountIn)),
+      tx.tokenIn,
+      tx.tokenOut,
+    );
+    const bestQuote = pickBestEvmSwapQuote(quotes);
+    if (!bestQuote) throw new Error("No swap quote available");
+
+    console.log({ tokenIn, tokenOut, bestQuote });
 
     const result = await hinkal.swap(
-      [tokenIn, tokenOut],
-      [-BigInt(tx.amountIn), 0n],
-      ExternalActionId.Uniswap,
-      priceDict.poolFee,
-      tx.feeToken,
+      chainId,
+      [tx.tokenIn, tx.tokenOut],
+      [-BigInt(tx.amountIn), bestQuote.outSwapAmount],
+      bestQuote.externalActionId,
+      bestQuote.swapData,
+      fee?.feeToken ?? tx.feeToken,
+      fee,
     );
 
     console.log("after transaction", { result });

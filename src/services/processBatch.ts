@@ -9,7 +9,8 @@ import {
   logBatchFailure,
   logBatchComplete,
 } from "../utils/logger";
-import { networkRegistry } from "@hinkal/common";
+import { networkRegistry } from "../constants";
+import { attachPrivateBalancesStoreConsoleLogger } from "./privateBalances";
 
 export interface BatchProcessResult {
   jobId: string;
@@ -23,10 +24,7 @@ export interface BatchProcessResult {
 const providerCache = new Map<number, ethers.Provider>();
 const hinkalCache = new Map<string, any>();
 
-const getProvider = (
-  chainId: number,
-  rpcUrl: string
-): ethers.Provider => {
+const getProvider = (chainId: number, rpcUrl: string): ethers.Provider => {
   if (!providerCache.has(chainId)) {
     providerCache.set(chainId, new ethers.JsonRpcProvider(rpcUrl));
   }
@@ -39,13 +37,16 @@ const getHinkal = async (walletConfig: {
 }): Promise<any> => {
   const key = `${walletConfig.privateKey}-${walletConfig.chainId}`;
   if (!hinkalCache.has(key)) {
-    hinkalCache.set(key, await initializeHinkal(walletConfig));
+    const hinkal = await initializeHinkal(walletConfig);
+    attachPrivateBalancesStoreConsoleLogger(hinkal);
+    hinkal.refreshBalance({ chainIdToUpdate: walletConfig.chainId });
+    hinkalCache.set(key, hinkal);
   }
   return hinkalCache.get(key)!;
 };
 
 export const processBatch = async (
-  input: BatchTransactionInput
+  input: BatchTransactionInput,
 ): Promise<BatchProcessResult> => {
   const jobId = `batch-${Date.now()}`;
   const startTime = Date.now();
@@ -64,7 +65,7 @@ export const processBatch = async (
 
       if (!chainId)
         throw new Error(
-          `Transaction ${tx.id}: missing chainId (not specified in transaction or default)`
+          `Transaction ${tx.id}: missing chainId (not specified in transaction or default)`,
         );
 
       if (!tx.privateKey)
@@ -79,7 +80,7 @@ export const processBatch = async (
       const balanceNative = ethers.formatEther(balance);
 
       logTransaction(i + 1, input.transactions.length, tx.type, tx.id);
-      logWallet(walletAddress, balanceNative, chainId);
+      await logWallet(walletAddress, balanceNative, chainId);
 
       const walletConfig = {
         privateKey: tx.privateKey,
