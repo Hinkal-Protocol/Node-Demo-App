@@ -16,7 +16,6 @@ import { networkRegistry } from "../constants";
 import { getAmountInToken } from "../utils/amount.utils";
 import { prepareEthersHinkal } from "@hinkal/common/providers/prepareEthersHinkal";
 import { findToken } from "../constants/token-data";
-import { pickBestEvmSwapQuote } from "../utils/swap.utils";
 import { Token } from "../types";
 
 export interface ExecutionResult {
@@ -249,32 +248,33 @@ const executeSwap = async (
 
     console.log("synced merkle tree");
 
+    const externalActionId = ExternalActionId.Lifi
+
     const tokenIn = await getToken(tx.tokenIn, chainId);
     const tokenOut = await getToken(tx.tokenOut, chainId);
     const fee = await getFee(
       hinkal,
       tx.feeToken ?? tx.tokenIn,
-      ExternalActionId.Uniswap,
+      externalActionId,
       [tx.tokenIn, tx.tokenOut],
     );
 
-    const quotes = await hinkal.getEvmSwapPrices(
+    const quote = await hinkal.getEvmSwapPrices(
       chainId,
       getAmountInToken(tokenIn, BigInt(tx.amountIn)),
       tx.tokenIn,
       tx.tokenOut,
     );
-    const bestQuote = pickBestEvmSwapQuote(quotes);
-    if (!bestQuote) throw new Error("No swap quote available");
+    if (!quote) throw new Error("No swap quote available");
 
-    console.log({ tokenIn, tokenOut, bestQuote });
+    console.log({ tokenIn, tokenOut, quote });
 
     const result = await hinkal.swap(
       chainId,
       [tx.tokenIn, tx.tokenOut],
-      [-BigInt(tx.amountIn), bestQuote.outSwapAmount],
-      bestQuote.externalActionId,
-      bestQuote.swapData,
+      [-BigInt(tx.amountIn), quote.outSwapAmountValue],
+      externalActionId,
+      quote.lifiDataValue,
       fee?.feeToken ?? tx.feeToken,
       fee,
     );
