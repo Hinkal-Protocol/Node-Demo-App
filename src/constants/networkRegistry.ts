@@ -1,7 +1,8 @@
 import { Network } from "../types";
 import { chainIds } from "../constants";
 
-export const ALCHEMY_API_KEY = "X4IiEZsSzGOrJq8tzq7Y3";
+export const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY ?? "";
+export const HELIUS_API_KEY = process.env.HELIUS_API_KEY ?? "";
 
 export const networkRegistry: Record<number, Network> = {
   [chainIds.ethMainnet]: {
@@ -37,8 +38,7 @@ export const networkRegistry: Record<number, Network> = {
   [chainIds.solanaMainnet]: {
     name: "Solana",
     chainId: chainIds.solanaMainnet,
-    fetchRpcUrl:
-      "https://mainnet.helius-rpc.com/?api-key=54ad9ec9-dad6-41de-b961-e3e8ea7a7188",
+    fetchRpcUrl: `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`,
   },
   [chainIds.tronNile]: {
     name: "Tron Nile",

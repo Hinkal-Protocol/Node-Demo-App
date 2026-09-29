@@ -15,6 +15,21 @@ A batch transaction processor for the [Hinkal](https://hinkal.pro) privacy proto
 yarn install
 ```
 
+### Environment
+
+Create your environment file and add your RPC API keys:
+
+```bash
+cp .env.example .env
+```
+
+| Variable          | Required | Description                                             |
+| ----------------- | -------- | ------------------------------------------------------- |
+| `ALCHEMY_API_KEY` | yes      | Alchemy key used to build RPC URLs for EVM and Tron chains. |
+| `HELIUS_API_KEY`  | Solana   | Helius key used to build the Solana RPC URL.            |
+
+> `.env` is git-ignored. Never commit it.
+
 ### Transaction Config Setup
 
 Copy the example config and fill in your private key(s) and transaction details:

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { processBatch } from "./services/processBatch";
 import { loadConfig } from "./services/loadConfig";
 import { initializeLogger } from "./utils/logger";
